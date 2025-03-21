@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import Footer from "../components/Footer";
+import { FaHeart } from "react-icons/fa";
+import { useWishlist } from "../context/WishlistContext";
 
-const ProductDetail = () => {  // Ensure the component name matches import
+const ProductDetail = () => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -13,6 +15,10 @@ const ProductDetail = () => {  // Ensure the component name matches import
   const { addToCart } = useCart();
   const [addingToCart, setAddingToCart] = useState(false);
   const [message, setMessage] = useState("");
+  const { addToWishlist, removeFromWishlist, isInWishlist, user } = useWishlist();
+  const [addingToWishlist, setAddingToWishlist] = useState(false);
+  const [inWishlist, setInWishlist] = useState(false);
+  
 
   useEffect(() => {
     if (!id) {
@@ -39,6 +45,17 @@ const ProductDetail = () => {  // Ensure the component name matches import
       });
   }, [id]);
 
+  useEffect(() => {
+    if (product) {
+      try {
+        setInWishlist(isInWishlist(product.productId));
+      } catch (error) {
+        console.error("Error checking wishlist status:", error);
+        setInWishlist(false);
+      }
+    }
+  }, [product, isInWishlist]);
+
   const handleAddToCart = () => {
     if (!selectedSize || !selectedColor) {
       setMessage("Please select size and color");
@@ -50,6 +67,34 @@ const ProductDetail = () => {  // Ensure the component name matches import
     addToCart(product, variant, quantity);
     setMessage("Added to cart!");
     setAddingToCart(false);
+
+    setTimeout(() => {
+      setMessage("");
+    }, 3000);
+  };
+
+  const handleWishlist = () => {
+    if (!user) {
+      setMessage("Please log in to use the wishlist feature");
+      return;
+    }
+
+    setAddingToWishlist(true);
+    try {
+      if (inWishlist) {
+        removeFromWishlist(product.productId);
+        setInWishlist(false);
+        setMessage("Removed from wishlist!");
+      } else {
+        addToWishlist(product);
+        setInWishlist(true);
+        setMessage("Added to wishlist!");
+      }
+    } catch (error) {
+      console.error("Error updating wishlist:", error);
+      setMessage("Please log in to use the wishlist feature");
+    }
+    setAddingToWishlist(false);
 
     setTimeout(() => {
       setMessage("");
@@ -146,14 +191,35 @@ const ProductDetail = () => {  // Ensure the component name matches import
               </div>
             </div>
 
-            {/* Add to Cart Button */}
-            <button 
-              className={`w-100 rounded-pill shadow-sm bg-dark text-white px-6 py-3 hover:bg-gray-800 transition ${addingToCart ? 'opacity-50 cursor-not-allowed' : ''}`}
-              onClick={handleAddToCart}
-              disabled={addingToCart}
-            >
-              {addingToCart ? 'Adding...' : 'Add to Cart'}
-            </button>
+            {/* Buttons */}
+            <div className="flex gap-3 mb-4">
+              <button
+                className={`rounded-pill shadow-sm px-6 py-3 transition ${
+                  inWishlist ? 'bg-danger text-white' : 'bg-light text-dark border'
+                } ${addingToWishlist ? 'opacity-50 cursor-not-allowed' : ''}`}
+                onClick={handleWishlist}
+                disabled={addingToWishlist}
+              >
+                <FaHeart className="me-2 inline" /> 
+                {inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
+              </button>
+
+              <button
+                className={`w-100 rounded-pill shadow-sm bg-dark text-white px-6 py-3 hover:bg-gray-800 transition ${
+                  addingToCart ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+                onClick={handleAddToCart}
+                disabled={addingToCart}
+              >
+                {addingToCart ? 'Adding...' : 'Add to Cart'}
+              </button>
+            </div>
+
+            {message && (
+              <p className={`text-center ${message.includes('Added') ? 'text-green-500' : 'text-red-500'}`}>
+                {message}
+              </p>
+            )}
           </div>
         </div>
       ) : (

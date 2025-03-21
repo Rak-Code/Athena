@@ -24,11 +24,25 @@ const Login = ({ handleCloseModal, setShowRegister, showRegister, onLoginSuccess
         },
       });
 
-      console.log("Login successful:", response.data);
-      onLoginSuccess(response.data); // Pass user data to the parent component
+      console.log("Login successful, raw response:", response.data);
+      
+      // Process the user data to ensure it has the expected structure
+      const userData = response.data;
+      
+      // Ensure the user object has both id and userId properties
+      const processedUserData = {
+        ...userData,
+        // If the backend returns userId but not id, add id property
+        id: userData.id || userData.userId,
+        // If the backend returns id but not userId, add userId property
+        userId: userData.userId || userData.id
+      };
+      
+      console.log("Processed user data:", processedUserData);
+      onLoginSuccess(processedUserData); // Pass processed user data to the parent component
 
       // Redirect based on role
-      if (response.data.role === "ADMIN" || response.data.role === "SUPER_ADMIN") {
+      if (processedUserData.role === "ADMIN" || processedUserData.role === "SUPER_ADMIN") {
         navigate("/admin"); // Redirect to admin panel
       } else {
         navigate("/"); // Redirect to home page for regular users

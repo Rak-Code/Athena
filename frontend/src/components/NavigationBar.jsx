@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { Navbar, Nav, Form, FormControl, Button, Container, Badge, Modal, Dropdown } from "react-bootstrap";
-import { FaShoppingCart, FaUser, FaSignOutAlt, FaUserCog, FaTachometerAlt } from "react-icons/fa";
+import { FaShoppingCart, FaUser, FaSignOutAlt, FaUserCog, FaTachometerAlt, FaHeart } from "react-icons/fa";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useCart } from "../context/CartContext";
+import { useWishlist } from "../context/WishlistContext";
 import Login from "../pages/Login"; // Import Login Component
 
 
@@ -12,11 +13,19 @@ import Login from "../pages/Login"; // Import Login Component
 
 const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
   const { cartCount } = useCart();
+  const { wishlistCount } = useWishlist();
   const [searchInput, setSearchInput] = useState("");
   const [showModal, setShowModal] = useState(false); // State for modal visibility
   const [showRegister, setShowRegister] = useState(false); // State to toggle between Login and Register
 
-  
+  // Debug user object
+  useEffect(() => {
+    if (user) {
+      console.log('NavigationBar - User object:', user);
+      console.log('User properties:', Object.keys(user));
+    }
+  }, [user]);
+
   const handleSearch = (e) => {
     e.preventDefault();
     setSearchTerm(searchInput);
@@ -63,6 +72,15 @@ const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
                 )}
                 <span className="ms-1">Cart</span>
               </Nav.Link>
+              <Nav.Link as={NavLink} to="/wishlist" className="d-flex align-items-center position-relative me-3">
+                <FaHeart size={20} className="me-1" />
+                {wishlistCount > 0 && (
+                  <Badge pill bg="danger" className="position-absolute top-0 start-100 translate-middle">
+                    {wishlistCount}
+                  </Badge>
+                )}
+                <span className="ms-1">Wishlist</span>
+              </Nav.Link>
 
               {/* Display user's profile or Login / Register button */}
               {user ? (
@@ -97,10 +115,10 @@ const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
                     </div>
                   </Dropdown.Toggle>
 
-                  <Dropdown.Menu 
-                    className="shadow-lg border-0" 
-                    style={{ 
-                      marginTop: "0.5rem", 
+                  <Dropdown.Menu
+                    className="shadow-lg border-0"
+                    style={{
+                      marginTop: "0.5rem",
                       borderRadius: "0.5rem",
                       minWidth: "200px"
                     }}
@@ -109,45 +127,45 @@ const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
                       <div className="fw-bold">{user.username}</div>
                       <div className="text-muted small">{user.email}</div>
                     </div>
-                    
+
                     <Dropdown.Item as={NavLink} to="/profile" className="py-2">
                       <div className="d-flex align-items-center">
-                        <FaUser className="me-2 text-secondary" /> 
+                        <FaUser className="me-2 text-secondary" />
                         <span>My Profile</span>
                       </div>
                     </Dropdown.Item>
-                    
+
                     {user.role === "ADMIN" && (
                       <Dropdown.Item as={NavLink} to="/admin" className="py-2">
                         <div className="d-flex align-items-center">
-                          <FaTachometerAlt className="me-2 text-secondary" /> 
+                          <FaTachometerAlt className="me-2 text-secondary" />
                           <span>Admin Dashboard</span>
                         </div>
                       </Dropdown.Item>
                     )}
-                    
+
                     <Dropdown.Divider />
-                    
-                    <Dropdown.Item 
-                      onClick={() => onLoginSuccess(null)} 
+
+                    <Dropdown.Item
+                      onClick={() => onLoginSuccess(null)}
                       className="text-danger py-2"
                     >
                       <div className="d-flex align-items-center">
-                        <FaSignOutAlt className="me-2" /> 
+                        <FaSignOutAlt className="me-2" />
                         <span>Logout</span>
                       </div>
                     </Dropdown.Item>
                   </Dropdown.Menu>
                 </Dropdown>
               ) : (
-                <Button 
-                  onClick={() => setShowModal(true)} 
-                  variant="outline-primary" 
+                <Button
+                  onClick={() => setShowModal(true)}
+                  variant="outline-primary"
                   className="d-flex align-items-center rounded-pill"
-                  style={{ 
-                    backgroundColor: "transparent", 
-                    borderColor: "#4a6eb5", 
-                    color: "#4a6eb5" 
+                  style={{
+                    backgroundColor: "transparent",
+                    borderColor: "#4a6eb5",
+                    color: "#4a6eb5"
                   }}
                 >
                   <FaUser size={16} className="me-2" /> Login / Register
