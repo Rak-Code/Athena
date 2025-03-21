@@ -13,6 +13,11 @@ public class OrderDetailService {
     @Autowired
     private OrderDetailRepository orderDetailRepository;
 
+    // Create order detail
+    public OrderDetail createOrderDetail(OrderDetail orderDetail) {
+        return orderDetailRepository.save(orderDetail);
+    }
+    
     // Add order details
     public OrderDetail addOrderDetail(OrderDetail orderDetail) {
         return orderDetailRepository.save(orderDetail);

@@ -88,6 +88,8 @@ const Checkout = () => {
     
     try {
       setLoading(true);
+      setError(null); // Clear any previous errors
+      
       const orderData = {
         customerName: formData.fullName,
         email: formData.email,
@@ -95,12 +97,25 @@ const Checkout = () => {
         shippingAddress,
         billingAddress,
         paymentMethod: formData.paymentMethod,
-        cartItems: cart // Send cart items to the backend
+        cartItems: cart.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image
+        }))
       };
       
+      console.log("Sending order data:", orderData);
+      
       const response = await axios.post("http://localhost:8080/api/orders", orderData, {
-        withCredentials: true
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
+      
+      console.log("Order response:", response.data);
       
       setLoading(false);
       
@@ -108,11 +123,33 @@ const Checkout = () => {
       clearCart();
       
       // Navigate to order confirmation page
-      navigate(`/order-confirmation/${response.data.id}`);
+      navigate(`/order-confirmation/${response.data.orderId}`);
     } catch (err) {
       setLoading(false);
-      setError("Failed to place order. Please try again.");
       console.error("Error placing order:", err);
+      
+      // Set a more detailed error message
+      if (err.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error("Error response data:", err.response.data);
+        console.error("Error response status:", err.response.status);
+        
+        if (typeof err.response.data === 'string') {
+          setError(err.response.data);
+        } else if (err.response.data && err.response.data.message) {
+          setError(err.response.data.message);
+        } else {
+          setError(`Server error (${err.response.status}). Please try again.`);
+        }
+      } else if (err.request) {
+        // The request was made but no response was received
+        console.error("Error request:", err.request);
+        setError("No response from server. Please check your internet connection and try again.");
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        setError("Failed to place order. Please try again.");
+      }
     }
   };
 

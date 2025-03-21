@@ -1,0 +1,161 @@
+.admin-orders {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+  }
+  
+  .admin-header h1 {
+    margin: 0;
+    color: #333;
+  }
+  
+  .filter-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .filter-controls label {
+    font-weight: 500;
+    color: #555;
+  }
+  
+  .filter-controls select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  .orders-table-container {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  
+  .orders-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .orders-table th,
+  .orders-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .orders-table th {
+    background-color: #f9f9f9;
+    font-weight: 600;
+    color: #555;
+  }
+  
+  .status-select {
+    padding: 6px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+  }
+  
+  .status-select.pending {
+    background-color: #ffecb3;
+    color: #e6a700;
+  }
+  
+  .status-select.processing {
+    background-color: #b3e0ff;
+    color: #0077cc;
+  }
+  
+  .status-select.shipped {
+    background-color: #c8e6c9;
+    color: #388e3c;
+  }
+  
+  .status-select.delivered {
+    background-color: #c8e6c9;
+    color: #388e3c;
+  }
+  
+  .status-select.cancelled {
+    background-color: #ffcdd2;
+    color: #d32f2f;
+  }
+  
+  .btn-sm {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+  
+  .btn-info {
+    background-color: #5bc0de;
+    color: white;
+  }
+  
+  .btn-info:hover {
+    background-color: #46b8da;
+  }
+  
+  .pagination {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 20px;
+  }
+  
+  .page-btn {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    background-color: white;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  
+  .page-btn.active {
+    background-color: #4a90e2;
+    color: white;
+    border-color: #4a90e2;
+  }
+  
+  .page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .no-orders {
+    background-color: white;
+    border-radius: 8px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .no-orders p {
+    margin-bottom: 20px;
+    color: #666;
+  }
+  
+  .loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    font-size: 18px;
+    color: #666;
+  }
+  
+  .error {
+    background-color: #ffcdd2;
+    color: #d32f2f;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+  }

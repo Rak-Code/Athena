@@ -23,6 +23,7 @@ const OrderConfirmation = () => {
         withCredentials: true
       });
       
+      console.log("Order response:", orderResponse.data);
       setOrder(orderResponse.data);
       
       // Fetch order items
@@ -30,6 +31,7 @@ const OrderConfirmation = () => {
         withCredentials: true
       });
       
+      console.log("Items response:", itemsResponse.data);
       setOrderItems(itemsResponse.data);
       setLoading(false);
     } catch (err) {
@@ -43,9 +45,39 @@ const OrderConfirmation = () => {
   if (error) return <div className="error">{error}</div>;
   if (!order) return <div className="error">Order not found</div>;
 
-  // Parse JSON strings to objects
-  const shippingAddress = JSON.parse(order.shippingAddress);
-  const billingAddress = order.billingAddress ? JSON.parse(order.billingAddress) : null;
+  // Safely handle the order data
+  const orderDate = order.orderDate || new Date().toISOString();
+  const customerName = order.user ? order.user.username : "Customer";
+  const displayId = order.orderId || orderId;
+  const status = order.status || "PENDING";
+  const totalAmount = order.totalAmount || 0;
+  
+  // Safely handle addresses - they might be strings or objects
+  let shippingAddress = {};
+  let billingAddress = null;
+  
+  try {
+    if (order.shippingAddress) {
+      if (typeof order.shippingAddress === 'string') {
+        shippingAddress = JSON.parse(order.shippingAddress);
+      } else {
+        shippingAddress = order.shippingAddress;
+      }
+    }
+    
+    if (order.billingAddress) {
+      if (typeof order.billingAddress === 'string') {
+        billingAddress = JSON.parse(order.billingAddress);
+      } else {
+        billingAddress = order.billingAddress;
+      }
+    }
+  } catch (e) {
+    console.error("Error parsing addresses:", e);
+    // Use default empty objects if parsing fails
+    shippingAddress = {};
+    billingAddress = null;
+  }
 
   return (
     <div className="order-confirmation-container">
@@ -55,11 +87,11 @@ const OrderConfirmation = () => {
           <i className="checkmark">✓</i>
         </div>
         <p className="confirmation-message">
-          Thank you for your order, {order.customerName}!
+          Thank you for your order, {customerName}!
         </p>
-        <p className="order-number">Order #{order.id}</p>
+        <p className="order-number">Order #{displayId}</p>
         <p className="order-date">
-          Placed on: {new Date(order.orderDate).toLocaleString()}
+          Placed on: {new Date(orderDate).toLocaleString()}
         </p>
       </div>
       
@@ -67,7 +99,7 @@ const OrderConfirmation = () => {
         <div className="order-details-grid">
           <div className="order-detail-card">
             <h3>Order Status</h3>
-            <div className="status-badge">{order.status}</div>
+            <div className="status-badge">{status}</div>
             <p>We'll send you shipping confirmation when your order ships.</p>
           </div>
           
@@ -75,25 +107,31 @@ const OrderConfirmation = () => {
             <h3>Payment Information</h3>
             <p><strong>Method:</strong> {order.paymentMethod === "cod" ? "Cash on Delivery" : 
                order.paymentMethod === "credit_card" ? "Credit Card" : "UPI"}</p>
-            <p><strong>Total:</strong> ₹{order.totalAmount.toFixed(2)}</p>
+            <p><strong>Total:</strong> ₹{parseFloat(totalAmount).toFixed(2)}</p>
           </div>
           
           <div className="order-detail-card">
             <h3>Shipping Address</h3>
-            <p>{shippingAddress.addressLine1}</p>
-            {shippingAddress.addressLine2 && <p>{shippingAddress.addressLine2}</p>}
-            <p>{shippingAddress.city}, {shippingAddress.state} {shippingAddress.postalCode}</p>
-            <p>{shippingAddress.country}</p>
+            {shippingAddress ? (
+              <>
+                <p>{shippingAddress.addressLine1 || ""}</p>
+                {shippingAddress.addressLine2 && <p>{shippingAddress.addressLine2}</p>}
+                <p>{shippingAddress.city || ""}, {shippingAddress.state || ""} {shippingAddress.postalCode || ""}</p>
+                <p>{shippingAddress.country || ""}</p>
+              </>
+            ) : (
+              <p>No shipping address provided</p>
+            )}
           </div>
           
           <div className="order-detail-card">
             <h3>Billing Address</h3>
             {billingAddress ? (
               <>
-                <p>{billingAddress.addressLine1}</p>
+                <p>{billingAddress.addressLine1 || ""}</p>
                 {billingAddress.addressLine2 && <p>{billingAddress.addressLine2}</p>}
-                <p>{billingAddress.city}, {billingAddress.state} {billingAddress.postalCode}</p>
-                <p>{billingAddress.country}</p>
+                <p>{billingAddress.city || ""}, {billingAddress.state || ""} {billingAddress.postalCode || ""}</p>
+                <p>{billingAddress.country || ""}</p>
               </>
             ) : (
               <p>Same as shipping address</p>
@@ -107,22 +145,21 @@ const OrderConfirmation = () => {
             <p>No items found</p>
           ) : (
             <>
-              {orderItems.map((item) => (
-                <div className="order-item" key={item.id}>
+              {orderItems.map((item, index) => (
+                <div className="order-item" key={item.orderDetailId || index}>
                   <div className="item-details">
-                    <h4>{item.productVariant.product.name}</h4>
-                    <p>Variant: {item.productVariant.name}</p>
+                    <h4>{item.product ? item.product.name : "Product"}</h4>
                     <p>Quantity: {item.quantity}</p>
                   </div>
                   <div className="item-price">
-                    ₹{(item.price * item.quantity).toFixed(2)}
+                    ₹{parseFloat(item.price * item.quantity).toFixed(2)}
                   </div>
                 </div>
               ))}
               
               <div className="order-total">
                 <span>Total</span>
-                <span>₹{order.totalAmount.toFixed(2)}</span>
+                <span>₹{parseFloat(totalAmount).toFixed(2)}</span>
               </div>
             </>
           )}
