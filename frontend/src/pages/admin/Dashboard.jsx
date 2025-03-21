@@ -4,6 +4,8 @@ import axios from "axios";
 import "../../styles/admin/Dashboard.css";
 
 const Dashboard = () => {
+  console.log("Dashboard component rendering");
+  
   const [stats, setStats] = useState({
     totalOrders: 0,
     pendingOrders: 0,

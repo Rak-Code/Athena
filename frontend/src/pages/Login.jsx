@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { Form, Button } from "react-bootstrap";
 import axios from "axios";
-import Register from "./Register"; // Import Register component
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 const Login = ({ handleCloseModal, setShowRegister, showRegister, onLoginSuccess }) => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState(""); // State for error messages
+  const navigate = useNavigate(); // Hook for navigation
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -23,8 +24,15 @@ const Login = ({ handleCloseModal, setShowRegister, showRegister, onLoginSuccess
       });
 
       console.log("Login successful:", response.data);
-      alert("Login successful!");
       onLoginSuccess(response.data); // Pass user data to the parent component
+
+      // Redirect based on role
+      if (response.data.role === "ADMIN" || response.data.role === "SUPER_ADMIN") {
+        navigate("/admin"); // Redirect to admin panel
+      } else {
+        navigate("/"); // Redirect to home page for regular users
+      }
+
       handleCloseModal(); // Close the modal after successful login
     } catch (error) {
       console.error("Login failed:", error.response?.data || error.message);

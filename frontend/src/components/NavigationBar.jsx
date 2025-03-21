@@ -1,18 +1,22 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
-import { Navbar, Nav, Form, FormControl, Button, Container, Badge, Modal } from "react-bootstrap";
-import { FaShoppingCart, FaUser } from "react-icons/fa";
+import { Navbar, Nav, Form, FormControl, Button, Container, Badge, Modal, Dropdown } from "react-bootstrap";
+import { FaShoppingCart, FaUser, FaSignOutAlt } from "react-icons/fa";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useCart } from "../context/CartContext";
 import Login from "../pages/Login"; // Import Login Component
 
-const NavigationBar = ({ setSearchTerm }) => {
+
+
+
+
+const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
   const { cartCount } = useCart();
   const [searchInput, setSearchInput] = useState("");
   const [showModal, setShowModal] = useState(false); // State for modal visibility
   const [showRegister, setShowRegister] = useState(false); // State to toggle between Login and Register
-  const [user, setUser] = useState(null); // State to track the logged-in user
 
+  
   const handleSearch = (e) => {
     e.preventDefault();
     setSearchTerm(searchInput);
@@ -21,11 +25,6 @@ const NavigationBar = ({ setSearchTerm }) => {
   const handleCloseModal = () => {
     setShowModal(false);
     setShowRegister(false); // Reset to Login view when modal is closed
-  };
-
-  const handleLoginSuccess = (userData) => {
-    setUser(userData); // Set the logged-in user
-    handleCloseModal(); // Close the modal
   };
 
   return (
@@ -65,26 +64,43 @@ const NavigationBar = ({ setSearchTerm }) => {
                 <span className="ms-1">Cart</span>
               </Nav.Link>
 
-              {/* Display user's first initial or Login / Register button */}
+              {/* Display user's profile or Login / Register button */}
               {user ? (
-                <Nav.Link className="d-flex align-items-center" style={{ cursor: "pointer" }}>
-                  <div
-                    style={{
-                      width: "30px",
-                      height: "30px",
-                      borderRadius: "50%",
-                      backgroundColor: "#007bff",
-                      color: "#fff",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "14px",
-                      fontWeight: "bold",
-                    }}
+                <Dropdown align="end">
+                  <Dropdown.Toggle
+                    as={Nav.Link}
+                    className="d-flex align-items-center"
+                    style={{ cursor: "pointer" }}
                   >
-                    {user.username.charAt(0).toUpperCase()} {/* Display first initial */}
-                  </div>
-                </Nav.Link>
+                    <div
+                      style={{
+                        width: "30px",
+                        height: "30px",
+                        borderRadius: "50%",
+                        backgroundColor: "#007bff",
+                        color: "#fff",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "14px",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {user.username.charAt(0).toUpperCase()} {/* Display first initial */}
+                    </div>
+                  </Dropdown.Toggle>
+
+                  <Dropdown.Menu>
+                    {user.role === "ADMIN" && (
+                      <Dropdown.Item as={NavLink} to="/admin">
+                        Admin Panel
+                      </Dropdown.Item>
+                    )}
+                    <Dropdown.Item onClick={() => onLoginSuccess(null)}>
+                      <FaSignOutAlt className="me-2" /> Logout
+                    </Dropdown.Item>
+                  </Dropdown.Menu>
+                </Dropdown>
               ) : (
                 <Nav.Link onClick={() => setShowModal(true)} className="d-flex align-items-center" style={{ cursor: "pointer" }}>
                   <FaUser size={20} className="me-1" /> Login / Register
@@ -105,7 +121,7 @@ const NavigationBar = ({ setSearchTerm }) => {
             handleCloseModal={handleCloseModal}
             setShowRegister={setShowRegister}
             showRegister={showRegister}
-            onLoginSuccess={handleLoginSuccess} // Pass the callback function
+            onLoginSuccess={onLoginSuccess} // Pass the callback function
           />
         </Modal.Body>
       </Modal>

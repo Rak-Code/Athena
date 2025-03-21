@@ -24,7 +24,7 @@ const AdminLayout = ({ children }) => {
                 to="/admin" 
                 className={isActive("/admin") && !isActive("/admin/products") && !isActive("/admin/orders") ? "active" : ""}
               >
-                <i className="fas fa-tachometer-alt"></i> Dashboard
+                Dashboard
               </Link>
             </li>
             <li>
@@ -32,7 +32,7 @@ const AdminLayout = ({ children }) => {
                 to="/admin/products" 
                 className={isActive("/admin/products") ? "active" : ""}
               >
-                <i className="fas fa-box"></i> Products
+                Products
               </Link>
             </li>
             <li>
@@ -40,12 +40,12 @@ const AdminLayout = ({ children }) => {
                 to="/admin/orders" 
                 className={isActive("/admin/orders") ? "active" : ""}
               >
-                <i className="fas fa-shopping-cart"></i> Orders
+                Orders
               </Link>
             </li>
             <li>
               <Link to="/" className="back-to-site">
-                <i className="fas fa-arrow-left"></i> Back to Site
+                Back to Site
               </Link>
             </li>
           </ul>
