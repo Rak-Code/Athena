@@ -52,9 +52,19 @@ export const WishlistProvider = ({ children, user }) => {
     if (!user) return;
     
     try {
-      console.log('Fetching wishlist for user:', user.id);
+      console.log('Fetching wishlist for user:', user);
       
-      const response = await axios.get(`http://localhost:8080/api/wishlist/user/${user.id}`, {
+      // Get the user ID using the helper function
+      const userId = getUserId();
+      
+      if (!userId) {
+        console.error('User ID is missing, cannot fetch wishlist');
+        return;
+      }
+      
+      console.log('Using user ID:', userId);
+      
+      const response = await axios.get(`http://localhost:8080/api/wishlist/user/${userId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }

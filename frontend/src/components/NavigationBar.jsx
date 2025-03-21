@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { Navbar, Nav, Form, FormControl, Button, Container, Badge, Modal, Dropdown } from "react-bootstrap";
 import { FaShoppingCart, FaUser, FaSignOutAlt, FaUserCog, FaTachometerAlt, FaHeart } from "react-icons/fa";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -17,6 +17,7 @@ const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
   const [searchInput, setSearchInput] = useState("");
   const [showModal, setShowModal] = useState(false); // State for modal visibility
   const [showRegister, setShowRegister] = useState(false); // State to toggle between Login and Register
+  const navigate = useNavigate(); // Hook for navigation
 
   // Debug user object
   useEffect(() => {
@@ -34,6 +35,20 @@ const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
   const handleCloseModal = () => {
     setShowModal(false);
     setShowRegister(false); // Reset to Login view when modal is closed
+  };
+
+  const handleLogout = () => {
+    // Clear all authentication data from localStorage
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    
+    // Call the onLoginSuccess callback with null to update the user state in App.jsx
+    onLoginSuccess(null);
+    
+    // Redirect to home page
+    navigate('/');
+    
+    console.log('User logged out successfully');
   };
 
   return (
@@ -147,7 +162,7 @@ const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
                     <Dropdown.Divider />
 
                     <Dropdown.Item
-                      onClick={() => onLoginSuccess(null)}
+                      onClick={handleLogout}
                       className="text-danger py-2"
                     >
                       <div className="d-flex align-items-center">

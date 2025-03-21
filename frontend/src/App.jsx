@@ -25,7 +25,22 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 const App = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [user, setUser] = useState(null); // Initialize user as null instead of a mock admin
+  const [user, setUser] = useState(null); // Initialize user as null
+
+  // Load user from localStorage when the app loads
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        console.log('Loaded user from localStorage:', parsedUser);
+        setUser(parsedUser);
+      } catch (error) {
+        console.error('Error parsing user from localStorage:', error);
+        localStorage.removeItem('user'); // Remove invalid data
+      }
+    }
+  }, []);
 
   // Debug the user object when it changes
   useEffect(() => {
@@ -38,17 +53,26 @@ const App = () => {
   const handleLoginSuccess = (userData) => {
     console.log('Login successful, received user data:', userData);
     
-    // Ensure the user object has the correct structure for the wishlist
-    const processedUserData = {
-      ...userData,
-      // If userData has userId but no id, add id property
-      id: userData.id || userData.userId,
-      // If userData has id but no userId, add userId property
-      userId: userData.userId || userData.id
-    };
-    
-    console.log('Processed user data:', processedUserData);
-    setUser(processedUserData); // Set the logged-in user with role
+    if (userData) {
+      // Ensure the user object has the correct structure for the wishlist
+      const processedUserData = {
+        ...userData,
+        // If userData has userId but no id, add id property
+        id: userData.id || userData.userId,
+        // If userData has id but no userId, add userId property
+        userId: userData.userId || userData.id
+      };
+      
+      console.log('Processed user data:', processedUserData);
+      setUser(processedUserData); // Set the logged-in user with role
+      
+      // Save user to localStorage for session persistence
+      localStorage.setItem('user', JSON.stringify(processedUserData));
+    } else {
+      // User is logging out
+      setUser(null);
+      localStorage.removeItem('user'); // Remove user from localStorage
+    }
   };
 
   return (

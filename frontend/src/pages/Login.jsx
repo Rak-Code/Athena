@@ -29,6 +29,12 @@ const Login = ({ handleCloseModal, setShowRegister, showRegister, onLoginSuccess
       // Process the user data to ensure it has the expected structure
       const userData = response.data;
       
+      // Store the authentication token in localStorage if it exists
+      if (userData.token) {
+        localStorage.setItem('token', userData.token);
+        console.log('Token stored in localStorage');
+      }
+      
       // Ensure the user object has both id and userId properties
       const processedUserData = {
         ...userData,
