@@ -403,8 +403,16 @@ const Checkout = () => {
             
             <div className="form-section">
               <h3>Payment Method</h3>
-              <div className="payment-options">
-                <div className="form-group radio-group">
+              <div className="mb-4">
+                <div 
+                  className="d-flex align-items-center p-3 mb-2 rounded" 
+                  style={{ 
+                    backgroundColor: formData.paymentMethod === "cod" ? "#f0f7ff" : "#f8f9fa",
+                    border: `1px solid ${formData.paymentMethod === "cod" ? "#cce5ff" : "#dee2e6"}`,
+                    cursor: "pointer"
+                  }}
+                  onClick={() => setFormData({...formData, paymentMethod: "cod"})}
+                >
                   <input 
                     type="radio" 
                     id="cod" 
@@ -412,11 +420,24 @@ const Checkout = () => {
                     value="cod" 
                     checked={formData.paymentMethod === "cod"} 
                     onChange={handleInputChange}
+                    className="me-3"
+                    style={{ cursor: "pointer" }}
                   />
-                  <label htmlFor="cod">Cash on Delivery</label>
+                  <label htmlFor="cod" className="mb-0 w-100" style={{ cursor: "pointer" }}>
+                    <span className="fw-bold">Cash on Delivery</span>
+                    <p className="text-muted mb-0 small">Pay when your order is delivered</p>
+                  </label>
                 </div>
                 
-                <div className="form-group radio-group">
+                <div 
+                  className="d-flex align-items-center p-3 mb-2 rounded" 
+                  style={{ 
+                    backgroundColor: formData.paymentMethod === "credit_card" ? "#f0f7ff" : "#f8f9fa",
+                    border: `1px solid ${formData.paymentMethod === "credit_card" ? "#cce5ff" : "#dee2e6"}`,
+                    cursor: "pointer"
+                  }}
+                  onClick={() => setFormData({...formData, paymentMethod: "credit_card"})}
+                >
                   <input 
                     type="radio" 
                     id="credit_card" 
@@ -424,11 +445,24 @@ const Checkout = () => {
                     value="credit_card" 
                     checked={formData.paymentMethod === "credit_card"} 
                     onChange={handleInputChange}
+                    className="me-3"
+                    style={{ cursor: "pointer" }}
                   />
-                  <label htmlFor="credit_card">Credit Card</label>
+                  <label htmlFor="credit_card" className="mb-0 w-100" style={{ cursor: "pointer" }}>
+                    <span className="fw-bold">Credit Card</span>
+                    <p className="text-muted mb-0 small">Pay securely with your credit card</p>
+                  </label>
                 </div>
                 
-                <div className="form-group radio-group">
+                <div 
+                  className="d-flex align-items-center p-3 mb-2 rounded" 
+                  style={{ 
+                    backgroundColor: formData.paymentMethod === "upi" ? "#f0f7ff" : "#f8f9fa",
+                    border: `1px solid ${formData.paymentMethod === "upi" ? "#cce5ff" : "#dee2e6"}`,
+                    cursor: "pointer"
+                  }}
+                  onClick={() => setFormData({...formData, paymentMethod: "upi"})}
+                >
                   <input 
                     type="radio" 
                     id="upi" 
@@ -436,43 +470,75 @@ const Checkout = () => {
                     value="upi" 
                     checked={formData.paymentMethod === "upi"} 
                     onChange={handleInputChange}
+                    className="me-3"
+                    style={{ cursor: "pointer" }}
                   />
-                  <label htmlFor="upi">UPI</label>
+                  <label htmlFor="upi" className="mb-0 w-100" style={{ cursor: "pointer" }}>
+                    <span className="fw-bold">UPI</span>
+                    <p className="text-muted mb-0 small">Pay using UPI apps like Google Pay, PhonePe, etc.</p>
+                  </label>
                 </div>
               </div>
               
               {formData.paymentMethod === "credit_card" && (
-                <div className="credit-card-details">
-                  <div className="form-group">
-                    <label htmlFor="cardNumber">Card Number</label>
-                    <input type="text" id="cardNumber" name="cardNumber" placeholder="Card number" maxLength="16" />
+                <div className="p-3 mb-3 rounded" style={{ backgroundColor: "#f8f9fa", border: "1px solid #dee2e6" }}>
+                  <div className="mb-3">
+                    <label htmlFor="cardNumber" className="form-label">Card Number</label>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      id="cardNumber" 
+                      name="cardNumber" 
+                      placeholder="Card number" 
+                      maxLength="16" 
+                    />
                   </div>
                   
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label htmlFor="expiryDate">Expiry Date</label>
-                      <input type="text" id="expiryDate" name="expiryDate" placeholder="MM/YY" maxLength="5" />
+                  <div className="row">
+                    <div className="col-md-6 mb-3">
+                      <label htmlFor="expiryDate" className="form-label">Expiry Date</label>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        id="expiryDate" 
+                        name="expiryDate" 
+                        placeholder="MM/YY" 
+                        maxLength="5" 
+                      />
                     </div>
                     
-                    <div className="form-group">
-                      <label htmlFor="cvv">CVV</label>
-                      <input type="text" id="cvv" name="cvv" placeholder="CVV" maxLength="3" />
+                    <div className="col-md-6 mb-3">
+                      <label htmlFor="cvv" className="form-label">CVV</label>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        id="cvv" 
+                        name="cvv" 
+                        placeholder="CVV" 
+                        maxLength="3" 
+                      />
                     </div>
                   </div>
                 </div>
               )}
               
               {formData.paymentMethod === "upi" && (
-                <div className="upi-details">
-                  <div className="form-group">
-                    <label htmlFor="upiId">UPI ID</label>
-                    <input type="text" id="upiId" name="upiId" placeholder="yourname@bankname" />
+                <div className="p-3 mb-3 rounded" style={{ backgroundColor: "#f8f9fa", border: "1px solid #dee2e6" }}>
+                  <div className="mb-3">
+                    <label htmlFor="upiId" className="form-label">UPI ID</label>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      id="upiId" 
+                      name="upiId" 
+                      placeholder="yourname@bankname" 
+                    />
                   </div>
                 </div>
               )}
             </div>
             
-            <button type="submit" className="place-order-btn">Place Order</button>
+            <button type="submit" className="btn btn-primary w-100 py-3 rounded">Place Order</button>
           </form>
         </div>
         

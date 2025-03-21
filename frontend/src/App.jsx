@@ -23,12 +23,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 const App = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [user, setUser] = useState({
-    // Temporary mock user for testing admin panel
-    // Remove this in production
-    username: "Admin",
-    role: "ADMIN"
-  }); // Store user data including role
+  const [user, setUser] = useState(null); // Initialize user as null instead of a mock admin
 
   const handleLoginSuccess = (userData) => {
     setUser(userData); // Set the logged-in user with role

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { Navbar, Nav, Form, FormControl, Button, Container, Badge, Modal, Dropdown } from "react-bootstrap";
-import { FaShoppingCart, FaUser, FaSignOutAlt } from "react-icons/fa";
+import { FaShoppingCart, FaUser, FaSignOutAlt, FaUserCog, FaTachometerAlt } from "react-icons/fa";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useCart } from "../context/CartContext";
 import Login from "../pages/Login"; // Import Login Component
@@ -54,7 +54,7 @@ const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
             </Nav>
 
             <Nav>
-              <Nav.Link as={NavLink} to="/cart" className="d-flex align-items-center position-relative">
+              <Nav.Link as={NavLink} to="/cart" className="d-flex align-items-center position-relative me-3">
                 <FaShoppingCart size={20} className="me-1" />
                 {cartCount > 0 && (
                   <Badge pill bg="danger" className="position-absolute top-0 start-100 translate-middle">
@@ -68,43 +68,90 @@ const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
               {user ? (
                 <Dropdown align="end">
                   <Dropdown.Toggle
-                    as={Nav.Link}
+                    as="div"
+                    id="profile-dropdown"
                     className="d-flex align-items-center"
-                    style={{ cursor: "pointer" }}
                   >
-                    <div
-                      style={{
-                        width: "30px",
-                        height: "30px",
-                        borderRadius: "50%",
-                        backgroundColor: "#007bff",
-                        color: "#fff",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "14px",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      {user.username.charAt(0).toUpperCase()} {/* Display first initial */}
+                    <div className="d-flex align-items-center" style={{ cursor: "pointer" }}>
+                      <div
+                        style={{
+                          width: "38px",
+                          height: "38px",
+                          borderRadius: "50%",
+                          backgroundColor: "#4a6eb5",
+                          color: "#fff",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "16px",
+                          fontWeight: "bold",
+                          boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+                          border: "2px solid #fff"
+                        }}
+                      >
+                        {user.username.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="ms-2 d-none d-md-inline fw-semibold" style={{ color: "#4a6eb5" }}>
+                        {user.username}
+                      </span>
                     </div>
                   </Dropdown.Toggle>
 
-                  <Dropdown.Menu>
+                  <Dropdown.Menu 
+                    className="shadow-lg border-0" 
+                    style={{ 
+                      marginTop: "0.5rem", 
+                      borderRadius: "0.5rem",
+                      minWidth: "200px"
+                    }}
+                  >
+                    <div className="px-4 py-3 border-bottom">
+                      <div className="fw-bold">{user.username}</div>
+                      <div className="text-muted small">{user.email}</div>
+                    </div>
+                    
+                    <Dropdown.Item as={NavLink} to="/profile" className="py-2">
+                      <div className="d-flex align-items-center">
+                        <FaUser className="me-2 text-secondary" /> 
+                        <span>My Profile</span>
+                      </div>
+                    </Dropdown.Item>
+                    
                     {user.role === "ADMIN" && (
-                      <Dropdown.Item as={NavLink} to="/admin">
-                        Admin Panel
+                      <Dropdown.Item as={NavLink} to="/admin" className="py-2">
+                        <div className="d-flex align-items-center">
+                          <FaTachometerAlt className="me-2 text-secondary" /> 
+                          <span>Admin Dashboard</span>
+                        </div>
                       </Dropdown.Item>
                     )}
-                    <Dropdown.Item onClick={() => onLoginSuccess(null)}>
-                      <FaSignOutAlt className="me-2" /> Logout
+                    
+                    <Dropdown.Divider />
+                    
+                    <Dropdown.Item 
+                      onClick={() => onLoginSuccess(null)} 
+                      className="text-danger py-2"
+                    >
+                      <div className="d-flex align-items-center">
+                        <FaSignOutAlt className="me-2" /> 
+                        <span>Logout</span>
+                      </div>
                     </Dropdown.Item>
                   </Dropdown.Menu>
                 </Dropdown>
               ) : (
-                <Nav.Link onClick={() => setShowModal(true)} className="d-flex align-items-center" style={{ cursor: "pointer" }}>
-                  <FaUser size={20} className="me-1" /> Login / Register
-                </Nav.Link>
+                <Button 
+                  onClick={() => setShowModal(true)} 
+                  variant="outline-primary" 
+                  className="d-flex align-items-center rounded-pill"
+                  style={{ 
+                    backgroundColor: "transparent", 
+                    borderColor: "#4a6eb5", 
+                    color: "#4a6eb5" 
+                  }}
+                >
+                  <FaUser size={16} className="me-2" /> Login / Register
+                </Button>
               )}
             </Nav>
           </Navbar.Collapse>

@@ -19,6 +19,20 @@ const Home = ({ searchTerm }) => {
       ) : (
         <>
           <h2 className="text-center my-4 fw-bold">New Arrivals</h2>
+          <ul className="nav nav-tabs">
+            <li className="nav-item">
+              <a className="nav-link active" aria-current="page" href="#">Home</a>
+            </li>
+            <li className="nav-item">
+              <a className="nav-link" href="#">MENS</a>
+            </li>
+            <li className="nav-item">
+              <a className="nav-link" href="#">WOMENS</a>
+            </li>
+            <li className="nav-item">
+              <a className="nav-link disabled" aria-disabled="true">KIDS</a>
+            </li>
+          </ul>
           <ProductList />
         </>
       )}

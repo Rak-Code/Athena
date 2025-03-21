@@ -72,31 +72,17 @@
     gap: 1rem;
   }
   
-  .checkbox-group,
-  .radio-group {
+  .checkbox-group {
     display: flex;
     align-items: center;
   }
   
-  .checkbox-group input,
-  .radio-group input {
+  .checkbox-group input {
     width: auto;
     margin-right: 0.5rem;
   }
   
-  .payment-options {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  
-  .credit-card-details,
-  .upi-details {
-    margin-top: 1rem;
-    padding: 1rem;
-    background-color: #f9f9f9;
-    border-radius: 4px;
-  }
+  /* Payment-related styles removed as we're using inline styles now */
   
   .place-order-btn {
     background-color: #4a6eb5;

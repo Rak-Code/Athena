@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Form, Button } from "react-bootstrap";
 import axios from "axios";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
+import Register from "./Register";
 
 const Login = ({ handleCloseModal, setShowRegister, showRegister, onLoginSuccess }) => {
   const [formData, setFormData] = useState({ email: "", password: "" });
