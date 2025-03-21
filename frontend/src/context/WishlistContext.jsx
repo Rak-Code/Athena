@@ -22,6 +22,21 @@ export const WishlistProvider = ({ children, user }) => {
     }
   }, [user]);
 
+  // Ensure we have a valid user ID for API calls
+  const getUserId = () => {
+    if (!user) return null;
+    
+    // Try to get the user ID from various possible properties
+    const userId = user.userId || user.id;
+    
+    if (!userId) {
+      console.error('Cannot determine user ID from user object:', user);
+      return null;
+    }
+    
+    return userId;
+  };
+
   // Load wishlist from local storage or API when component mounts
   useEffect(() => {
     if (user) {
@@ -195,8 +210,8 @@ export const WishlistProvider = ({ children, user }) => {
     try {
       console.log('Clearing wishlist for user:', user);
       
-      // Get the user ID (could be either userId or id)
-      const userId = user.userId || user.id;
+      // Get the user ID using the helper function
+      const userId = getUserId();
       
       if (!userId) {
         console.error('User ID is missing:', user);

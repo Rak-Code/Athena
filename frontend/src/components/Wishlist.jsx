@@ -49,11 +49,6 @@ const Wishlist = () => {
     <Container className="py-5">
       <h2 className="text-center mb-4">My Wishlist</h2>
       
-      {/* Debug information */}
-      <Alert variant="info" className="mb-3">
-        <pre style={{ whiteSpace: 'pre-wrap' }}>{debugInfo}</pre>
-      </Alert>
-      
       {wishlistItems.length === 0 ? (
         <div className="text-center py-5">
           <h4>Your wishlist is empty</h4>
@@ -77,7 +72,16 @@ const Wishlist = () => {
               console.log('Rendering wishlist item:', item);
               return (
                 <Col key={item.productId || item.id}>
-                  <Card className="h-100 shadow-sm">
+                  <Card className="h-100 shadow-sm" style={{ transition: 'transform 0.3s ease, box-shadow 0.3s ease' }} 
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-5px)';
+                      e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.1)';
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)';
+                    }}
+                  >
                     <Link to={`/product/${item.productId || item.id}`}>
                       <Card.Img 
                         variant="top" 
@@ -100,11 +104,23 @@ const Wishlist = () => {
                           <FaTrash /> Remove
                         </Button>
                         <Button 
-                          variant="dark" 
-                          size="sm"
+                          variant="primary" 
+                          className="px-3"
+                          style={{ 
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                            transition: 'all 0.3s ease'
+                          }}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.transform = 'scale(1.05)';
+                            e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.transform = 'scale(1)';
+                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                          }}
                           onClick={() => handleAddToCart(item)}
                         >
-                          <FaShoppingCart className="me-1" /> Add to Cart
+                          <FaShoppingCart className="me-2" /> Add to Cart
                         </Button>
                       </div>
                     </Card.Body>

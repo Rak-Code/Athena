@@ -48,7 +48,11 @@ const ProductDetail = () => {
   useEffect(() => {
     if (product) {
       try {
-        setInWishlist(isInWishlist(product.productId));
+        console.log('Checking if product is in wishlist:', product);
+        // Use either productId or id, whichever is available
+        const productId = product.productId || product.id;
+        console.log('Using product ID for wishlist check:', productId);
+        setInWishlist(isInWishlist(productId));
       } catch (error) {
         console.error("Error checking wishlist status:", error);
         setInWishlist(false);

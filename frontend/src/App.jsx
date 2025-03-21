@@ -42,7 +42,9 @@ const App = () => {
     const processedUserData = {
       ...userData,
       // If userData has userId but no id, add id property
-      id: userData.id || userData.userId
+      id: userData.id || userData.userId,
+      // If userData has id but no userId, add userId property
+      userId: userData.userId || userData.id
     };
     
     console.log('Processed user data:', processedUserData);
