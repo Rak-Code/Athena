@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Form, Button } from "react-bootstrap"; // Removed Modal
+import { Form, Button } from "react-bootstrap";
+import axios from "axios";
 import Register from "./Register"; // Import Register component
 
-const Login = ({ handleCloseModal }) => {
+const Login = ({ handleCloseModal, setShowRegister, showRegister, onLoginSuccess }) => {
   const [formData, setFormData] = useState({ email: "", password: "" });
-  const [showRegister, setShowRegister] = useState(false); // State to toggle Register modal
+  const [error, setError] = useState(""); // State for error messages
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -12,16 +13,32 @@ const Login = ({ handleCloseModal }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    alert("Login functionality here!");
-    handleCloseModal(); // Close modal after login
+
+    try {
+      // Send login request to the backend
+      const response = await axios.post("http://localhost:8080/api/users/login", formData, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log("Login successful:", response.data);
+      alert("Login successful!");
+      onLoginSuccess(response.data); // Pass user data to the parent component
+      handleCloseModal(); // Close the modal after successful login
+    } catch (error) {
+      console.error("Login failed:", error.response?.data || error.message);
+      setError("Invalid email or password. Please try again."); // Set error message
+    }
   };
 
   return (
     <>
       {!showRegister ? (
         <div style={{ padding: '20px', maxWidth: '400px', margin: '0 auto' }}>
+          <h2 className="text-center mb-4">Login</h2>
+          {error && <div className="alert alert-danger">{error}</div>} {/* Display error message */}
           <Form onSubmit={handleSubmit}>
-            <h2 className="text-center mb-4">Login</h2>
             <Form.Group controlId="formBasicEmail" className="mb-3">
               <Form.Label>Email address</Form.Label>
               <Form.Control
@@ -31,6 +48,7 @@ const Login = ({ handleCloseModal }) => {
                 value={formData.email}
                 onChange={handleChange}
                 className="rounded-pill border-0 shadow-sm"
+                required
               />
             </Form.Group>
 
@@ -43,6 +61,7 @@ const Login = ({ handleCloseModal }) => {
                 value={formData.password}
                 onChange={handleChange}
                 className="rounded-pill border-0 shadow-sm"
+                required
               />
             </Form.Group>
 

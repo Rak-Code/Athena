@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { Form, Button } from "react-bootstrap";
+import axios from "axios";
 
 const Register = ({ handleCloseModal, setShowRegister }) => {
   const [formData, setFormData] = useState({
-    name: "",
+    name: "", // This will map to 'username' in the backend
     email: "",
     password: "",
   });
@@ -14,8 +15,29 @@ const Register = ({ handleCloseModal, setShowRegister }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    alert("Registration functionality here!");
-    handleCloseModal(); // Close the modal after registration
+
+    // Map frontend data to backend schema
+    const userData = {
+      username: formData.name, // Map 'name' to 'username'
+      email: formData.email,
+      password: formData.password,
+    };
+
+    try {
+      // Send POST request to the backend
+      const response = await axios.post("http://localhost:8080/api/users", userData, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log("Registration successful:", response.data);
+      alert("Registration successful!");
+      handleCloseModal(); // Close the modal after successful registration
+    } catch (error) {
+      console.error("Registration failed:", error.response?.data || error.message);
+      alert("Registration failed. Please try again.");
+    }
   };
 
   return (
@@ -65,7 +87,11 @@ const Register = ({ handleCloseModal, setShowRegister }) => {
 
       <p className="text-center mt-3">
         Already have an account?{" "}
-        <span className="text-dark fw-bold" style={{ cursor: "pointer" }} onClick={() => setShowRegister(false)}>
+        <span
+          className="text-dark fw-bold"
+          style={{ cursor: "pointer" }}
+          onClick={() => setShowRegister(false)}
+        >
           Login
         </span>
       </p>

@@ -10,6 +10,8 @@ const NavigationBar = ({ setSearchTerm }) => {
   const { cartCount } = useCart();
   const [searchInput, setSearchInput] = useState("");
   const [showModal, setShowModal] = useState(false); // State for modal visibility
+  const [showRegister, setShowRegister] = useState(false); // State to toggle between Login and Register
+  const [user, setUser] = useState(null); // State to track the logged-in user
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -18,6 +20,12 @@ const NavigationBar = ({ setSearchTerm }) => {
 
   const handleCloseModal = () => {
     setShowModal(false);
+    setShowRegister(false); // Reset to Login view when modal is closed
+  };
+
+  const handleLoginSuccess = (userData) => {
+    setUser(userData); // Set the logged-in user
+    handleCloseModal(); // Close the modal
   };
 
   return (
@@ -57,21 +65,48 @@ const NavigationBar = ({ setSearchTerm }) => {
                 <span className="ms-1">Cart</span>
               </Nav.Link>
 
-              {/* Open Login Modal on Click */}
-              <Nav.Link onClick={() => setShowModal(true)} className="d-flex align-items-center" style={{ cursor: "pointer" }}>
-                <FaUser size={20} className="me-1" /> Login / Register
-              </Nav.Link>
+              {/* Display user's first initial or Login / Register button */}
+              {user ? (
+                <Nav.Link className="d-flex align-items-center" style={{ cursor: "pointer" }}>
+                  <div
+                    style={{
+                      width: "30px",
+                      height: "30px",
+                      borderRadius: "50%",
+                      backgroundColor: "#007bff",
+                      color: "#fff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "14px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {user.username.charAt(0).toUpperCase()} {/* Display first initial */}
+                  </div>
+                </Nav.Link>
+              ) : (
+                <Nav.Link onClick={() => setShowModal(true)} className="d-flex align-items-center" style={{ cursor: "pointer" }}>
+                  <FaUser size={20} className="me-1" /> Login / Register
+                </Nav.Link>
+              )}
             </Nav>
           </Navbar.Collapse>
         </Container>
       </Navbar>
 
-      {/* Modal for Login */}
+      {/* Modal for Login and Register */}
       <Modal show={showModal} onHide={handleCloseModal} centered>
         <Modal.Header closeButton>
+          <Modal.Title>{showRegister ? "Register" : "Login"}</Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-3" style={{ padding: '20px', borderRadius: '15px' }}>
-          <Login handleClose={handleCloseModal} />
+          <Login
+            handleCloseModal={handleCloseModal}
+            setShowRegister={setShowRegister}
+            showRegister={showRegister}
+            onLoginSuccess={handleLoginSuccess} // Pass the callback function
+          />
         </Modal.Body>
       </Modal>
     </>
