@@ -16,7 +16,7 @@ const AddProduct = () => {
     stockQuantity: "",
     imageUrl: "",
     categoryId: "",
-    size: "MEDIUM", // Default size
+    size: "M", // Default size - matches backend enum
     color: "",
     brand: "",
     featured: false
@@ -53,27 +53,45 @@ const AddProduct = () => {
       setLoading(true);
       setError(null);
       
-      // Convert string values to appropriate types
+      // Format the data to match the backend model
       const productData = {
-        ...formData,
-        price: parseFloat(formData.price),
+        name: formData.name,
+        description: formData.description,
+        price: formData.price, // Backend will parse this as BigDecimal
         stockQuantity: parseInt(formData.stockQuantity),
-        categoryId: parseInt(formData.categoryId)
+        imageUrl: formData.imageUrl,
+        size: formData.size, // This should be one of: S, M, L, XL, XXL
+        category: {
+          categoryId: parseInt(formData.categoryId)
+        }
       };
+
+      // Add optional fields if they exist
+      if (formData.color) productData.color = formData.color;
+      if (formData.brand) productData.brand = formData.brand;
+      if (formData.featured !== undefined) productData.featured = formData.featured;
       
-      await axios.post("http://localhost:8080/api/products", productData, {
+      console.log("Sending product data:", productData);
+      
+      const response = await axios.post("http://localhost:8080/api/products", productData, {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json'
         }
       });
       
+      console.log("Product created successfully:", response.data);
       setLoading(false);
       navigate("/admin/products");
     } catch (err) {
       setLoading(false);
       console.error("Error adding product:", err);
-      setError("Failed to add product. Please try again.");
+      if (err.response) {
+        console.error("Response data:", err.response.data);
+        setError(`Failed to add product: ${err.response.data.message || 'Unknown error'}`);
+      } else {
+        setError("Failed to add product. Please try again.");
+      }
     }
   };
 
@@ -177,10 +195,11 @@ const AddProduct = () => {
               value={formData.size}
               onChange={handleInputChange}
             >
-              <option value="SMALL">Small</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="LARGE">Large</option>
-              <option value="XLARGE">X-Large</option>
+              <option value="S">Small</option>
+              <option value="M">Medium</option>
+              <option value="L">Large</option>
+              <option value="XL">X-Large</option>
+              <option value="XXL">XX-Large</option>
             </select>
           </div>
         </div>
