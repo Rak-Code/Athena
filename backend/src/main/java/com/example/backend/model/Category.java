@@ -1,5 +1,6 @@
 package com.example.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,6 +28,7 @@ public class Category {
     // One-to-Many relationship with Product
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
+    @JsonIgnore // Ignore this when sending JSON to avoid nesting loop
     private List<Product> products = new ArrayList<>();
 
     public Long getCategoryId() {

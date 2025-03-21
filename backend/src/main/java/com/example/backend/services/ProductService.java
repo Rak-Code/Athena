@@ -27,8 +27,11 @@ public class ProductService {
 
     // Get all products
     public List<Product> getAllProducts() {
-        return productRepository.findAll();
+        List<Product> products = productRepository.findAll();
+        System.out.println("Fetched Products: " + products.size()); // Check how many are returned
+        return products;
     }
+
 
     // Get product by ID
     public Optional<Product> getProductById(Long productId) {

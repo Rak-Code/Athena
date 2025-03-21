@@ -10,7 +10,9 @@ import java.util.List;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByCategory_CategoryId(Long categoryId); // Find products by category ID
-    List<Product> findByNameContainingIgnoreCase(String name); // Search products by name
+    List<Product> findByNameContainingIgnoreCase(String name);// Search products by name
+
+
 
     @Query("SELECT p FROM Product p WHERE "
             + "(:categoryId IS NULL OR p.category.categoryId = :categoryId) AND "

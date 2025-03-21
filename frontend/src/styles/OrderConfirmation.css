@@ -1,0 +1,173 @@
+.order-confirmation-container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+  }
+  
+  .confirmation-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  .confirmation-header h2 {
+    font-size: 2rem;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+  
+  .success-checkmark {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    background-color: #4caf50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .checkmark {
+    color: white;
+    font-size: 40px;
+    font-weight: bold;
+  }
+  
+  .confirmation-message {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .order-number {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+  
+  .order-date {
+    color: #666;
+  }
+  
+  .confirmation-details {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+  }
+  
+  .order-details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  @media (max-width: 768px) {
+    .order-details-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .order-detail-card {
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    padding: 1.5rem;
+  }
+  
+  .order-detail-card h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    color: #444;
+  }
+  
+  .order-detail-card p {
+    margin: 0.5rem 0;
+    line-height: 1.4;
+  }
+  
+  .status-badge {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: 100px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: capitalize;
+    background-color: #e3f2fd;
+    color: #1976d2;
+    margin-bottom: 0.75rem;
+  }
+  
+  .order-items {
+    margin-top: 2rem;
+  }
+  
+  .order-items h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .order-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 0;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .item-details h4 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+  }
+  
+  .item-details p {
+    margin: 0.25rem 0;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  .item-price {
+    font-weight: 600;
+  }
+  
+  .order-total {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+  
+  .confirmation-actions {
+    margin-top: 2.5rem;
+    text-align: center;
+  }
+  
+  .action-button {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s;
+  }
+  
+  .action-button.primary {
+    background-color: #4a6eb5;
+    color: white;
+  }
+  
+  .action-button.primary:hover {
+    background-color: #3a5ea5;
+  }
+  
+  .loading,
+  .error {
+    text-align: center;
+    padding: 3rem;
+    font-size: 1.2rem;
+  }
+  
+  .error {
+    color: #e53935;
+  }
