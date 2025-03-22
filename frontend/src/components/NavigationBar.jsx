@@ -6,6 +6,8 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import Login from "../pages/Login"; // Import Login Component
+import { FaDove } from "react-icons/fa";
+
 
 
 
@@ -55,9 +57,12 @@ const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
     <>
       <Navbar bg="light" expand="lg" className="shadow-sm">
         <Container>
-          <Navbar.Brand as={NavLink} to="/" className="fw-bold fs-4">
-            Athena
-          </Navbar.Brand>
+        <Navbar.Brand as={NavLink} to="/" className="d-flex align-items-center custom-brand">
+        {/* Owl Icon */}
+        <FaDove className="owl-icon me-2" />
+        {/* Brand Name */}
+        <span className="brand-text">Athena</span>
+      </Navbar.Brand>
 
           <Navbar.Toggle aria-controls="navbar-nav" />
           <Navbar.Collapse id="navbar-nav">
