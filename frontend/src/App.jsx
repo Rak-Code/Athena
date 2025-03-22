@@ -11,6 +11,7 @@ import { WishlistProvider } from "./context/WishlistContext";
 import Checkout from "./pages/Checkout";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import Wishlist from "./components/Wishlist";
+import MyProfile from "./pages/MyProfile";
 
 // Admin imports
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -84,6 +85,7 @@ const App = () => {
             {/* Customer Routes */}
             <Route path="/" element={<Home searchTerm={searchTerm} />} />
             <Route path="/cart" element={<Cart />} />
+            <Route path="/my-profile" element={<MyProfile />} />
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
             <Route path="/register" element={<Register />} />

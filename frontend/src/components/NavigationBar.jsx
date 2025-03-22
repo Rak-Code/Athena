@@ -143,7 +143,7 @@ const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
                       <div className="text-muted small">{user.email}</div>
                     </div>
 
-                    <Dropdown.Item as={NavLink} to="/profile" className="py-2">
+                    <Dropdown.Item as={NavLink} to="/my-profile" className="py-2">
                       <div className="d-flex align-items-center">
                         <FaUser className="me-2 text-secondary" />
                         <span>My Profile</span>
