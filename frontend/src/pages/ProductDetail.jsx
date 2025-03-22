@@ -4,6 +4,7 @@ import { useCart } from "../context/CartContext";
 import Footer from "../components/Footer";
 import { FaHeart } from "react-icons/fa";
 import { useWishlist } from "../context/WishlistContext";
+import ReviewsSection from "../components/ReviewsSection"; // Import the new component
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -18,7 +19,6 @@ const ProductDetail = () => {
   const { addToWishlist, removeFromWishlist, isInWishlist, user } = useWishlist();
   const [addingToWishlist, setAddingToWishlist] = useState(false);
   const [inWishlist, setInWishlist] = useState(false);
-  
 
   useEffect(() => {
     if (!id) {
@@ -48,10 +48,7 @@ const ProductDetail = () => {
   useEffect(() => {
     if (product) {
       try {
-        console.log('Checking if product is in wishlist:', product);
-        // Use either productId or id, whichever is available
         const productId = product.productId || product.id;
-        console.log('Using product ID for wishlist check:', productId);
         setInWishlist(isInWishlist(productId));
       } catch (error) {
         console.error("Error checking wishlist status:", error);
@@ -151,50 +148,6 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            {/* Color Selection */}
-            <div className="mb-4">
-              <label className="block text-gray-700 font-medium mb-2">Color:</label>
-              <div className="flex gap-3">
-                {["Red", "Blue", "Black", "White"].map((color) => (
-                  <button
-                    key={color}
-                    className={`px-4 py-2 border rounded-lg ${
-                      selectedColor === color ? "bg-dark text-white" : "bg-gray-100 hover:bg-gray-200"
-                    }`}
-                    onClick={() => setSelectedColor(color)}
-                  >
-                    {color}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Quantity Selection */}
-            <div className="mb-6">
-              <label className="block text-gray-700 font-medium mb-2">Quantity:</label>
-              <div className="flex items-center">
-                <button
-                  className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-l-lg border"
-                  onClick={() => quantity > 1 && setQuantity(quantity - 1)}
-                >
-                  -
-                </button>
-                <input
-                  type="number"
-                  min="1"
-                  value={quantity}
-                  onChange={handleQuantityChange}
-                  className="w-12 text-center border-gray-300 focus:border-blue-500"
-                />
-                <button
-                  className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-r-lg border"
-                  onClick={() => setQuantity(quantity + 1)}
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
             {/* Buttons */}
             <div className="flex gap-3 mb-4">
               <button
@@ -229,6 +182,10 @@ const ProductDetail = () => {
       ) : (
         <p className="text-center text-red-500">Product not found!</p>
       )}
+
+      {/* Reviews Section */}
+      <ReviewsSection productId={id} />
+
       <Footer />
     </div>
   );

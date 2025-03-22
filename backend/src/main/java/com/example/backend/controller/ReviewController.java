@@ -52,12 +52,20 @@ public class ReviewController {
         return ResponseEntity.noContent().build();
     }
 
-    // Get reviews by product ID
+    // Change this method
     @GetMapping("/product/{productId}")
     public ResponseEntity<List<Review>> getReviewsByProductId(@PathVariable Long productId) {
         List<Review> reviews = reviewService.getReviewsByProductId(productId);
         return ResponseEntity.ok(reviews);
     }
+
+    // Add this method with the correct path
+    @GetMapping("/api/products/{productId}/reviews")
+    public ResponseEntity<List<Review>> getReviewsForProduct(@PathVariable Long productId) {
+        List<Review> reviews = reviewService.getReviewsByProductId(productId);
+        return ResponseEntity.ok(reviews);
+    }
+
 
     // Get reviews by user ID
     @GetMapping("/user/{userId}")
