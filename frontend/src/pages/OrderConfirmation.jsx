@@ -27,7 +27,7 @@ const OrderConfirmation = () => {
       setOrder(orderResponse.data);
       
       // Fetch order items
-      const itemsResponse = await axios.get(`http://localhost:8080/api/orders/${orderId}/items`, {
+      const itemsResponse = await axios.get(`http://localhost:8080/api/order-details/order/${orderId}`,  {
         withCredentials: true
       });
       
