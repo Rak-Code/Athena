@@ -4,14 +4,13 @@ import { useCart } from "../context/CartContext";
 import Footer from "../components/Footer";
 import { FaHeart } from "react-icons/fa";
 import { useWishlist } from "../context/WishlistContext";
-import ReviewsSection from "../components/ReviewsSection"; // Import the new component
+import ReviewsSection from "../components/ReviewsSection";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState("");
-  const [selectedColor, setSelectedColor] = useState("");
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
   const [addingToCart, setAddingToCart] = useState(false);
@@ -58,13 +57,13 @@ const ProductDetail = () => {
   }, [product, isInWishlist]);
 
   const handleAddToCart = () => {
-    if (!selectedSize || !selectedColor) {
-      setMessage("Please select size and color");
+    if (!selectedSize) {
+      setMessage("Please select a size");
       return;
     }
 
     setAddingToCart(true);
-    const variant = { size: selectedSize, color: selectedColor };
+    const variant = { size: selectedSize };
     addToCart(product, variant, quantity);
     setMessage("Added to cart!");
     setAddingToCart(false);
@@ -109,37 +108,42 @@ const ProductDetail = () => {
     }
   };
 
-  if (loading) return <p className="text-center text-gray-500">Loading...</p>;
+  if (loading) return <p className="text-center text-gray-500 text-lg">Loading...</p>;
 
   return (
-    <div className="container mx-auto px-4 py-10">
+    <div className="container mx-auto px-4 py-12 bg-gray-50 min-h-screen">
       {product ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center mb-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mb-12">
           {/* Product Image */}
           <div className="flex justify-center">
-            <img
-              src={product.imageUrl}
-              alt={product.name}
-              className="w-3/4 rounded-lg shadow-lg object-cover"
-            />
+            <div className="relative w-full max-w-md">
+              <img
+                src={product.imageUrl}
+                alt={product.name}
+                className="w-full rounded-xl shadow-lg object-cover transform transition-transform duration-300 hover:scale-105"
+              />
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/10 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+            </div>
           </div>
 
           {/* Product Info */}
-          <div>
-            <h1 className="text-4xl font-bold mb-3">{product.name}</h1>
-            <p className="text-2xl text-gray-700 font-semibold mb-3">₹{product.price}</p>
-            <p className="text-gray-600 mb-5">{product.description}</p>
+          <div className="flex flex-col gap-6">
+            <h1 className="text-4xl font-bold text-gray-800">{product.name}</h1>
+            <p className="text-3xl font-semibold text-gray-900">₹{product.price}</p>
+            <p className="text-gray-600 text-lg leading-relaxed">{product.description}</p>
 
             {/* Size Selection */}
-            <div className="mb-4">
-              <label className="block text-gray-700 font-medium mb-2">Size:</label>
+            <div className="mb-6">
+              <label className="block text-gray-700 font-medium mb-2 text-lg">Size:</label>
               <div className="flex gap-3">
                 {["S", "M", "L", "XL"].map((size) => (
                   <button
                     key={size}
-                    className={`px-4 py-2 border rounded-lg ${
-                      selectedSize === size ? "bg-dark text-white" : "bg-gray-100 hover:bg-gray-200"
-                    }`}
+                    className={`px-4 py-2 border rounded-full text-sm font-medium transition-all duration-300 
+                      ${selectedSize === size 
+                        ? "bg-blue-600 text-white border-blue-600 shadow-md" 
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100 hover:border-gray-400"
+                      } focus:outline-none focus:ring-2 focus:ring-blue-300 active:scale-95`}
                     onClick={() => setSelectedSize(size)}
                   >
                     {size}
@@ -148,39 +152,64 @@ const ProductDetail = () => {
               </div>
             </div>
 
+            {/* Quantity Selection */}
+            <div className="mb-6">
+              <label className="block text-gray-700 font-medium mb-2 text-lg">Quantity:</label>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setQuantity(quantity > 1 ? quantity - 1 : 1)}
+                  className="px-3 py-1 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-all duration-300"
+                >
+                  -
+                </button>
+                <span className="px-4 py-1 border border-gray-300 rounded-lg text-gray-700">{quantity}</span>
+                <button
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="px-3 py-1 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-all duration-300"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
             {/* Buttons */}
-            <div className="flex gap-3 mb-4">
+            <div className="flex gap-4 mb-6">
               <button
-                className={`rounded-pill shadow-sm px-6 py-3 transition ${
-                  inWishlist ? 'bg-danger text-white' : 'bg-light text-dark border'
-                } ${addingToWishlist ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`flex items-center gap-2 px-6 py-3 rounded-pill text-sm font-semibold transition-all duration-300 shadow-md
+                  ${inWishlist 
+                    ? "bg-red-500 text-white hover:bg-red-600" 
+                    : "bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200"
+                  } ${addingToWishlist ? "opacity-50 cursor-not-allowed" : ""}`}
                 onClick={handleWishlist}
                 disabled={addingToWishlist}
               >
-                <FaHeart className="me-2 inline" /> 
-                {inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                <FaHeart className="text-lg" />
+                {inWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
               </button>
 
               <button
-                className={`w-100 rounded-pill shadow-sm bg-dark text-white px-6 py-3 hover:bg-gray-800 transition ${
-                  addingToCart ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
+                className={`flex-1 px-6 py-3 rounded-pill text-sm font-semibold bg-dark text-white hover:bg-gray-800 transition-all duration-300 shadow-md
+                  ${addingToCart ? "opacity-50 cursor-not-allowed" : ""}`}
                 onClick={handleAddToCart}
                 disabled={addingToCart}
               >
-                {addingToCart ? 'Adding...' : 'Add to Cart'}
+                {addingToCart ? "Adding..." : "Add to Cart"}
               </button>
             </div>
 
+            {/* Feedback Message */}
             {message && (
-              <p className={`text-center ${message.includes('Added') ? 'text-green-500' : 'text-red-500'}`}>
+              <p
+                className={`text-center py-2 px-4 rounded-pill text-sm font-medium
+                  ${message.includes("Added") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+              >
                 {message}
               </p>
             )}
           </div>
         </div>
       ) : (
-        <p className="text-center text-red-500">Product not found!</p>
+        <p className="text-center text-red-500 text-lg">Product not found!</p>
       )}
 
       {/* Reviews Section */}

@@ -35,7 +35,19 @@ public class ProductService {
 
     // Get product by ID
     public Optional<Product> getProductById(Long productId) {
-        return productRepository.findById(productId);
+        System.out.println("Attempting to fetch product with ID: " + productId);
+        Optional<Product> product = productRepository.findById(productId);
+        if (product.isPresent()) {
+            System.out.println("Product found: " + product.get().getName());
+            // Verify category is not null
+            if (product.get().getCategory() == null) {
+                System.err.println("WARNING: Product with ID " + productId + " has null category!");
+            }
+            return product;
+        } else {
+            System.err.println("ERROR: Product with ID " + productId + " not found in database");
+            return Optional.empty();
+        }
     }
 
     // Update product
@@ -82,3 +94,4 @@ public class ProductService {
         return productRepository.findByFilters(categoryId, minPrice, maxPrice, size, inStock);
     }
 }
+
