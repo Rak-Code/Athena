@@ -40,6 +40,41 @@ Athena is a full-stack e-commerce application with a robust admin panel for mana
   - `/api/wishlist`: Wishlist management.
   - `/api/reviews`: User reviews on products.
 
+### Recent Features and Improvements
+- **Product Browsing**:
+  - View products with detailed information and images
+  - Search and filter products
+  - Product categories and subcategories
+  - Product reviews and ratings
+- **Shopping Cart**:
+  - Add/remove items from cart
+  - Update quantities
+  - Calculate total price with discounts
+  - View cart summary
+- **Wishlist**:
+  - Save products for later
+  - View and manage wishlist items
+  - Consistent handling of product IDs
+  - Improved error handling
+- **Order Management**:
+  - Place orders with multiple items
+  - View order history
+  - Track order status
+  - Order confirmation page
+  - Order details with item breakdown
+- **User Profile**:
+  - View and edit profile information
+  - View order history
+  - Manage wishlist
+  - View and manage reviews
+  - Contact us form
+  - Dark theme UI
+- **Authentication**:
+  - User registration and login
+  - Secure password hashing
+  - JWT-based authentication
+  - Role-based access control
+
 ---
 
 ## Project Structure
@@ -203,3 +238,62 @@ jwt.secret=your_jwt_secret
 - `POST /api/order-details`
 - `GET /api/order-details/order/{orderId}`
 
+### Authentication
+- `POST /api/auth/login`: User login
+- `POST /api/auth/register`: User registration
+- `GET /api/auth/verify`: Token verification
+
+### Products
+- `GET /api/products`: List products
+- `GET /api/products/{id}`: Get product details
+- `POST /api/products`: Add new product
+- `PUT /api/products/{id}`: Update product
+- `DELETE /api/products/{id}`: Delete product
+
+### Orders
+- `POST /api/orders`: Create order
+- `GET /api/orders`: List orders
+- `GET /api/orders/{id}`: Get order details
+- `PUT /api/orders/{id}/status`: Update order status
+
+### Cart
+- `POST /api/cart`: Add to cart
+- `GET /api/cart/{userId}`: Get cart items
+- `PUT /api/cart/{id}`: Update cart item
+- `DELETE /api/cart/{id}`: Remove from cart
+
+### Wishlist
+- `POST /api/wishlist`: Add to wishlist
+- `GET /api/wishlist/{userId}`: Get wishlist
+- `DELETE /api/wishlist/{id}`: Remove from wishlist
+
+### Reviews
+- `POST /api/reviews`: Add review
+- `GET /api/reviews/product/{productId}`: Get product reviews
+- `PUT /api/reviews/{id}`: Update review
+- `DELETE /api/reviews/{id}`: Delete review
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a new Pull Request
+
+---
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
+
+## Acknowledgments
+
+- React Bootstrap for UI components
+- Spring Boot for backend framework
+- JWT for authentication
+- MySQL for database management
