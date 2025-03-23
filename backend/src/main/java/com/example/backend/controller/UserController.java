@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
@@ -18,7 +19,7 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @PostMapping
+    @PostMapping("/register")
     public ResponseEntity<User> createUser(@RequestBody User user) {
         User createdUser = userService.createUser(user);
         return ResponseEntity.ok(createdUser);
@@ -67,14 +68,17 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
         // Find user by email
-        User user = userService.findByEmail(loginRequest.getEmail())
-                .orElse(null);
-
-        // Check if user exists and password matches
-        if (user != null && user.getPassword().equals(loginRequest.getPassword())) {
-            return ResponseEntity.ok(user); // Return user details on successful login
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        Optional<User> userOptional = userService.findByEmail(loginRequest.getEmail());
+        
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            // Verify password using BCrypt
+            if (userService.verifyPassword(loginRequest.getPassword(), user.getPassword())) {
+                return ResponseEntity.ok(user); // Return user details on successful login
+            }
         }
+        
+        // Either user not found or password doesn't match
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
     }
 }

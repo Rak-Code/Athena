@@ -25,7 +25,7 @@ const Register = ({ handleCloseModal, setShowRegister }) => {
 
     try {
       // Send POST request to the backend
-      const response = await axios.post("http://localhost:8080/api/users", userData, {
+      const response = await axios.post("http://localhost:8080/api/users/register", userData, {
         headers: {
           "Content-Type": "application/json",
         },

@@ -28,6 +28,13 @@ const App = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [user, setUser] = useState(null); // Initialize user as null
 
+  // Clear localStorage on initial load to ensure a clean login state
+  useEffect(() => {
+    // Uncomment the next line to clear user data on every app load
+    localStorage.removeItem('user');
+    console.log('User data cleared from localStorage');
+  }, []);
+
   // Load user from localStorage when the app loads
   useEffect(() => {
     const storedUser = localStorage.getItem('user');

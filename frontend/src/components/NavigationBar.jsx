@@ -65,18 +65,20 @@ const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
       </Navbar.Brand>
 
           <Navbar.Toggle aria-controls="navbar-nav" />
-          <Navbar.Collapse id="navbar-nav">
+
+           <Navbar.Collapse id="navbar-nav">
+            {/* Search Bar */}
             <Nav className="mx-auto">
-              <Form className="d-flex position-relative" style={{ width: "500px" }} onSubmit={handleSearch}>
+              <Form className="d-flex position-relative" onSubmit={handleSearch}>
                 <FormControl
                   type="search"
                   placeholder="Search..."
-                  className="me-2 rounded-pill border-0 shadow-sm"
-                  style={{ backgroundColor: "#f8f9fa" }}
+                  className="me-2 rounded-full border-0 shadow-sm px-3"
+                  style={{ backgroundColor: "#f8f9fa", width: "400px" }}
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                 />
-                <Button type="submit" variant="outline-dark" className="rounded-pill">
+                <Button type="submit" variant="outline-dark" className="rounded-full px-3">
                   Search
                 </Button>
               </Form>
@@ -188,7 +190,7 @@ const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
                     color: "#4a6eb5"
                   }}
                 >
-                  <FaUser size={16} className="me-2" /> Login / Register
+                  <FaUser size={16} className="me-2" /> Sign In
                 </Button>
               )}
             </Nav>
