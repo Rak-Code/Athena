@@ -130,6 +130,17 @@ const MyProfile = () => {
     setEditForm({ ...editForm, [name]: value });
   };
 
+  const removeFromWishlist = async (productId) => {
+    try {
+      await axios.delete(
+        `http://localhost:8080/api/wishlist/${productId}`,
+        { withCredentials: true }
+      );
+    } catch (error) {
+      console.error("Error removing from wishlist:", error);
+    }
+  };
+
   if (loading) {
     return (
       <Container className="py-5 text-center">
@@ -499,47 +510,57 @@ const MyProfile = () => {
                   <h4 className="mb-4 fw-bold text-dark">My Wishlist</h4>
                   {wishlist.length > 0 ? (
                     <Row xs={1} md={2} lg={3} className="g-4">
-                      {wishlist.map((item) => (
-                        <Col key={item.id}>
-                          <Card className="h-100 shadow-sm border-0 rounded-3 overflow-hidden">
-                            <Card.Img
-                              variant="top"
-                              src={
-                                item.product.imageUrl ||
-                                "https://via.placeholder.com/150"
-                              }
-                              alt={item.product.name}
-                              style={{ height: "200px", objectFit: "cover" }}
-                              className="bg-light"
-                            />
-                            <Card.Body className="p-3">
-                              <Card.Title className="fs-6 fw-bold mb-2">
-                                {item.product.name}
-                              </Card.Title>
-                              <Card.Text className="text-dark fw-bold fs-5 mb-3">
-                                ${item.product.price}
-                              </Card.Text>
-                              <div className="d-flex justify-content-between align-items-center">
-                                <Link
-                                  to={`/product/${item.product.productId}`}
-                                  className="btn btn-sm btn-dark rounded-pill px-3"
-                                >
-                                  View Product
-                                </Link>
-                                <Button
-                                  variant="link"
-                                  className="text-danger p-0"
-                                  onClick={() => {
-                                    // Implement remove from wishlist functionality
-                                  }}
-                                >
-                                  <FaTrash />
-                                </Button>
-                              </div>
-                            </Card.Body>
-                          </Card>
-                        </Col>
-                      ))}
+                      {wishlist.map((item) => {
+                        // Handle different possible data structures for wishlist items
+                        const product = item.product || item;
+                        const productId = product.productId || product.id;
+                        const imageUrl = product.imageUrl || "https://via.placeholder.com/150";
+                        const name = product.name || "Product";
+                        const price = product.price || 0;
+                        
+                        return (
+                          <Col key={item.id || productId}>
+                            <Card className="h-100 shadow-sm border-0 rounded-3 overflow-hidden">
+                              <Card.Img
+                                variant="top"
+                                src={imageUrl}
+                                alt={name}
+                                style={{ height: "200px", objectFit: "cover" }}
+                                className="bg-light"
+                              />
+                              <Card.Body className="p-3">
+                                <Card.Title className="fs-6 fw-bold mb-2">
+                                  {name}
+                                </Card.Title>
+                                <Card.Text className="text-dark fw-bold fs-5 mb-3">
+                                  ${price}
+                                </Card.Text>
+                                <div className="d-flex justify-content-between align-items-center">
+                                  <Link
+                                    to={`/product/${productId}`}
+                                    className="btn btn-sm btn-dark rounded-pill px-3"
+                                  >
+                                    View Product
+                                  </Link>
+                                  <Button
+                                    variant="link"
+                                    className="text-danger p-0"
+                                    onClick={() => {
+                                      removeFromWishlist(productId);
+                                      // Also remove from local wishlist state
+                                      setWishlist(wishlist.filter(w => 
+                                        (w.product?.productId || w.product?.id || w.productId || w.id) !== productId
+                                      ));
+                                    }}
+                                  >
+                                    <FaTrash />
+                                  </Button>
+                                </div>
+                              </Card.Body>
+                            </Card>
+                          </Col>
+                        );
+                      })}
                     </Row>
                   ) : (
                     <div className="text-center py-5">

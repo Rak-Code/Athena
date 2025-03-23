@@ -15,7 +15,7 @@ const ProductDetail = () => {
   const { addToCart } = useCart();
   const [addingToCart, setAddingToCart] = useState(false);
   const [message, setMessage] = useState("");
-  const { addToWishlist, removeFromWishlist, isInWishlist, user } = useWishlist();
+  const { addToWishlist, removeByUserAndProduct, isInWishlist, user } = useWishlist();
   const [addingToWishlist, setAddingToWishlist] = useState(false);
   const [inWishlist, setInWishlist] = useState(false);
 
@@ -34,6 +34,7 @@ const ProductDetail = () => {
         return response.json();
       })
       .then((data) => {
+        console.log("Fetched product:", data); // Debugging
         setProduct(data);
         setLoading(false);
       })
@@ -44,17 +45,20 @@ const ProductDetail = () => {
       });
   }, [id]);
 
+  // Check if the product is in the user's wishlist
   useEffect(() => {
-    if (product) {
+    console.log("User object in ProductDetail:", user); // Debugging
+    if (product && user) {
       try {
         const productId = product.productId || product.id;
+        console.log("Checking if product is in wishlist, productId:", productId);
         setInWishlist(isInWishlist(productId));
       } catch (error) {
         console.error("Error checking wishlist status:", error);
         setInWishlist(false);
       }
     }
-  }, [product, isInWishlist]);
+  }, [product, isInWishlist, user]);
 
   const handleAddToCart = () => {
     if (!selectedSize) {
@@ -74,25 +78,49 @@ const ProductDetail = () => {
   };
 
   const handleWishlist = () => {
+    console.log("handleWishlist called, user:", user);
+    if (user) {
+      console.log("User properties:", Object.keys(user));
+      console.log("User ID:", user.id);
+      console.log("User userId:", user.userId);
+    }
+    
+    // Check if user is logged in - only check if user exists, not the ID properties
     if (!user) {
+      console.log("User not logged in");
       setMessage("Please log in to use the wishlist feature");
       return;
     }
 
     setAddingToWishlist(true);
     try {
+      const productId = product.productId || product.id;
+      console.log("Handling wishlist for product ID:", productId);
+      
       if (inWishlist) {
-        removeFromWishlist(product.productId);
+        // Use removeByUserAndProduct instead of removeFromWishlist
+        removeByUserAndProduct(productId);
         setInWishlist(false);
         setMessage("Removed from wishlist!");
       } else {
-        addToWishlist(product);
+        // Create a complete product object to ensure all required fields are present
+        const productToAdd = {
+          id: product.id,
+          productId: product.productId || product.id,
+          name: product.name,
+          price: product.price,
+          imageUrl: product.imageUrl,
+          description: product.description
+        };
+        
+        console.log("Adding product to wishlist:", productToAdd);
+        addToWishlist(productToAdd);
         setInWishlist(true);
         setMessage("Added to wishlist!");
       }
     } catch (error) {
       console.error("Error updating wishlist:", error);
-      setMessage("Please log in to use the wishlist feature");
+      setMessage("Failed to update wishlist. Please try again.");
     }
     setAddingToWishlist(false);
 

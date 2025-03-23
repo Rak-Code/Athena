@@ -45,6 +45,19 @@ const Login = ({ handleCloseModal, setShowRegister, showRegister, onLoginSuccess
       };
       
       console.log("Processed user data:", processedUserData);
+      console.log("User ID properties - id:", processedUserData.id, "userId:", processedUserData.userId);
+      
+      // Double check that we have valid ID properties
+      if (!processedUserData.id && !processedUserData.userId) {
+        console.error("Warning: User data is missing both id and userId properties!");
+        // Try to extract ID from other properties if available
+        if (userData.user && (userData.user.id || userData.user.userId)) {
+          processedUserData.id = userData.user.id || userData.user.userId;
+          processedUserData.userId = userData.user.userId || userData.user.id;
+          console.log("Extracted ID from nested user object:", processedUserData.id);
+        }
+      }
+      
       onLoginSuccess(processedUserData); // Pass processed user data to the parent component
 
       // Redirect based on role

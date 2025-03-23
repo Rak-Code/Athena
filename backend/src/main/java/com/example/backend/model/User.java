@@ -5,6 +5,9 @@ package com.example.backend.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "Users")
 @Data
@@ -32,6 +35,21 @@ public class User {
 
     public enum Role {
         USER, ADMIN, SUPER_ADMIN
+    }
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Address> addresses = new ArrayList<>();
+
+    // Helper method to add address
+    public void addAddress(Address address) {
+        addresses.add(address);
+        address.setUser(this);
+    }
+
+    // Helper method to remove address
+    public void removeAddress(Address address) {
+        addresses.remove(address);
+        address.setUser(null);
     }
 
     public Long getUserId() {

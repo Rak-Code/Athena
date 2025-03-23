@@ -28,58 +28,50 @@ const App = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [user, setUser] = useState(null); // Initialize user as null
 
-  // Clear localStorage on initial load to ensure a clean login state
-  useEffect(() => {
-    // Uncomment the next line to clear user data on every app load
-    localStorage.removeItem('user');
-    console.log('User data cleared from localStorage');
-  }, []);
-
   // Load user from localStorage when the app loads
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
+    const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
-        console.log('Loaded user from localStorage:', parsedUser);
+        console.log("Loaded user from localStorage:", parsedUser);
         setUser(parsedUser);
       } catch (error) {
-        console.error('Error parsing user from localStorage:', error);
-        localStorage.removeItem('user'); // Remove invalid data
+        console.error("Error parsing user from localStorage:", error);
+        localStorage.removeItem("user"); // Remove corrupted data
+        setUser(null); // Reset user state
       }
     }
   }, []);
 
   // Debug the user object when it changes
   useEffect(() => {
-    console.log('App - User object updated:', user);
+    console.log("App - User object updated:", user);
     if (user) {
-      console.log('User properties:', Object.keys(user));
+      console.log("User properties:", Object.keys(user));
     }
   }, [user]);
 
   const handleLoginSuccess = (userData) => {
-    console.log('Login successful, received user data:', userData);
-    
+    console.log("Login successful, received user data:", userData);
+
     if (userData) {
-      // Ensure the user object has the correct structure for the wishlist
+      // Ensure the user object has the correct structure
       const processedUserData = {
         ...userData,
-        // If userData has userId but no id, add id property
-        id: userData.id || userData.userId,
-        // If userData has id but no userId, add userId property
-        userId: userData.userId || userData.id
+        id: userData.id || userData.userId, // Ensure `id` is set
+        userId: userData.userId || userData.id, // Ensure `userId` is set
       };
-      
-      console.log('Processed user data:', processedUserData);
-      setUser(processedUserData); // Set the logged-in user with role
-      
+
+      console.log("Processed user data:", processedUserData);
+      setUser(processedUserData); // Set the logged-in user
+
       // Save user to localStorage for session persistence
-      localStorage.setItem('user', JSON.stringify(processedUserData));
+      localStorage.setItem("user", JSON.stringify(processedUserData));
     } else {
       // User is logging out
       setUser(null);
-      localStorage.removeItem('user'); // Remove user from localStorage
+      localStorage.removeItem("user"); // Remove user from localStorage
     }
   };
 
@@ -87,18 +79,28 @@ const App = () => {
     <CartProvider>
       <WishlistProvider user={user}>
         <Router>
-          <NavigationBar setSearchTerm={setSearchTerm} user={user} onLoginSuccess={handleLoginSuccess} />
+          <NavigationBar
+            setSearchTerm={setSearchTerm}
+            user={user}
+            onLoginSuccess={handleLoginSuccess}
+          />
           <Routes>
             {/* Customer Routes */}
             <Route path="/" element={<Home searchTerm={searchTerm} />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/my-profile" element={<MyProfile />} />
             <Route path="/wishlist" element={<Wishlist />} />
-            <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
+            <Route
+              path="/login"
+              element={<Login onLoginSuccess={handleLoginSuccess} />}
+            />
             <Route path="/register" element={<Register />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
+            <Route
+              path="/order-confirmation/:orderId"
+              element={<OrderConfirmation />}
+            />
 
             {/* Admin Routes */}
             <Route
@@ -152,7 +154,10 @@ const App = () => {
               }
             />
 
-            <Route path="*" element={<h1 className="text-center mt-5">404 - Page Not Found</h1>} />
+            <Route
+              path="*"
+              element={<h1 className="text-center mt-5">404 - Page Not Found</h1>}
+            />
           </Routes>
         </Router>
       </WishlistProvider>

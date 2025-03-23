@@ -8,11 +8,6 @@ import { useWishlist } from "../context/WishlistContext";
 import Login from "../pages/Login"; // Import Login Component
 import { FaDove } from "react-icons/fa";
 
-
-
-
-
-
 const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
   const { cartCount } = useCart();
   const { wishlistCount } = useWishlist();
@@ -21,14 +16,6 @@ const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
   const [showRegister, setShowRegister] = useState(false); // State to toggle between Login and Register
   const navigate = useNavigate(); // Hook for navigation
 
-  // Debug user object
-  useEffect(() => {
-    if (user) {
-      console.log('NavigationBar - User object:', user);
-      console.log('User properties:', Object.keys(user));
-    }
-  }, [user]);
-
   const handleSearch = (e) => {
     e.preventDefault();
     setSearchTerm(searchInput);
@@ -36,20 +23,14 @@ const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
 
   const handleCloseModal = () => {
     setShowModal(false);
-    setShowRegister(false); // Reset to Login view when modal is closed
+    setShowRegister(false);
   };
 
   const handleLogout = () => {
-    // Clear all authentication data from localStorage
     localStorage.removeItem('user');
     localStorage.removeItem('token');
-    
-    // Call the onLoginSuccess callback with null to update the user state in App.jsx
     onLoginSuccess(null);
-    
-    // Redirect to home page
     navigate('/');
-    
     console.log('User logged out successfully');
   };
 
@@ -57,17 +38,14 @@ const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
     <>
       <Navbar bg="light" expand="lg" className="shadow-sm">
         <Container>
-        <Navbar.Brand as={NavLink} to="/" className="d-flex align-items-center custom-brand">
-        {/* Owl Icon */}
-        <FaDove className="owl-icon me-2" />
-        {/* Brand Name */}
-        <span className="brand-text">Athena</span>
-      </Navbar.Brand>
+          <Navbar.Brand as={NavLink} to="/" className="d-flex align-items-center custom-brand">
+            <FaDove className="owl-icon me-2" />
+            <span className="brand-text">Athena</span>
+          </Navbar.Brand>
 
           <Navbar.Toggle aria-controls="navbar-nav" />
 
-           <Navbar.Collapse id="navbar-nav">
-            {/* Search Bar */}
+          <Navbar.Collapse id="navbar-nav">
             <Nav className="mx-auto">
               <Form className="d-flex position-relative" onSubmit={handleSearch}>
                 <FormControl
@@ -94,6 +72,7 @@ const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
                 )}
                 <span className="ms-1">Cart</span>
               </Nav.Link>
+
               <Nav.Link as={NavLink} to="/wishlist" className="d-flex align-items-center position-relative me-3">
                 <FaHeart size={20} className="me-1" />
                 {wishlistCount > 0 && (
@@ -104,14 +83,9 @@ const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
                 <span className="ms-1">Wishlist</span>
               </Nav.Link>
 
-              {/* Display user's profile or Login / Register button */}
               {user ? (
                 <Dropdown align="end">
-                  <Dropdown.Toggle
-                    as="div"
-                    id="profile-dropdown"
-                    className="d-flex align-items-center"
-                  >
+                  <Dropdown.Toggle as="div" id="profile-dropdown" className="d-flex align-items-center">
                     <div className="d-flex align-items-center" style={{ cursor: "pointer" }}>
                       <div
                         style={{
@@ -129,22 +103,15 @@ const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
                           border: "2px solid #fff"
                         }}
                       >
-                        {user.username.charAt(0).toUpperCase()}
+                        {user.username ? user.username.charAt(0).toUpperCase() : 'U'}
                       </div>
                       <span className="ms-2 d-none d-md-inline fw-semibold" style={{ color: "#4a6eb5" }}>
-                        {user.username}
+                        {user.username ? user.username : 'User'}
                       </span>
                     </div>
                   </Dropdown.Toggle>
 
-                  <Dropdown.Menu
-                    className="shadow-lg border-0"
-                    style={{
-                      marginTop: "0.5rem",
-                      borderRadius: "0.5rem",
-                      minWidth: "200px"
-                    }}
-                  >
+                  <Dropdown.Menu className="shadow-lg border-0" style={{ marginTop: "0.5rem", borderRadius: "0.5rem", minWidth: "200px" }}>
                     <div className="px-4 py-3 border-bottom">
                       <div className="fw-bold">{user.username}</div>
                       <div className="text-muted small">{user.email}</div>
@@ -168,10 +135,7 @@ const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
 
                     <Dropdown.Divider />
 
-                    <Dropdown.Item
-                      onClick={handleLogout}
-                      className="text-danger py-2"
-                    >
+                    <Dropdown.Item onClick={handleLogout} className="text-danger py-2">
                       <div className="d-flex align-items-center">
                         <FaSignOutAlt className="me-2" />
                         <span>Logout</span>
@@ -198,7 +162,6 @@ const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
         </Container>
       </Navbar>
 
-      {/* Modal for Login and Register */}
       <Modal show={showModal} onHide={handleCloseModal} centered>
         <Modal.Header closeButton>
           <Modal.Title>{showRegister ? "Register" : "Login"}</Modal.Title>
@@ -208,7 +171,7 @@ const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
             handleCloseModal={handleCloseModal}
             setShowRegister={setShowRegister}
             showRegister={showRegister}
-            onLoginSuccess={onLoginSuccess} // Pass the callback function
+            onLoginSuccess={onLoginSuccess}
           />
         </Modal.Body>
       </Modal>
