@@ -15,37 +15,23 @@ const Login = ({ handleCloseModal, setShowRegister, showRegister, onLoginSuccess
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      // Send login request to the backend
+      setError("");
       const response = await axios.post("http://localhost:8080/api/users/login", formData, {
-        headers: {
-          "Content-Type": "application/json",
-        },
+        withCredentials: true
       });
-
-      console.log("Login successful, raw response:", response.data);
       
-      // Process the user data to ensure it has the expected structure
+      // Process the response data
       const userData = response.data;
+      console.log("Login response data:", userData);
       
-      // Store the authentication token in localStorage if it exists
-      if (userData.token) {
-        localStorage.setItem('token', userData.token);
-        console.log('Token stored in localStorage');
-      }
-      
-      // Ensure the user object has both id and userId properties
+      // Normalize user data structure
       const processedUserData = {
         ...userData,
-        // If the backend returns userId but not id, add id property
-        id: userData.id || userData.userId,
-        // If the backend returns id but not userId, add userId property
-        userId: userData.userId || userData.id
+        id: userData.id || userData.userId || (userData.user ? userData.user.id : null),
+        userId: userData.userId || userData.id || (userData.user ? userData.user.userId : null),
+        role: userData.role || userData.userRole || (userData.user ? userData.user.role : null) || "USER"
       };
-      
-      console.log("Processed user data:", processedUserData);
-      console.log("User ID properties - id:", processedUserData.id, "userId:", processedUserData.userId);
       
       // Double check that we have valid ID properties
       if (!processedUserData.id && !processedUserData.userId) {
@@ -58,12 +44,15 @@ const Login = ({ handleCloseModal, setShowRegister, showRegister, onLoginSuccess
         }
       }
       
+      console.log("Final processed user data:", processedUserData);
       onLoginSuccess(processedUserData); // Pass processed user data to the parent component
 
       // Redirect based on role
       if (processedUserData.role === "ADMIN" || processedUserData.role === "SUPER_ADMIN") {
+        console.log("Redirecting to admin dashboard");
         navigate("/admin"); // Redirect to admin panel
       } else {
+        console.log("Redirecting to home page");
         navigate("/"); // Redirect to home page for regular users
       }
 

@@ -9,11 +9,27 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
   }
   
   .admin-header h1 {
     margin: 0;
     color: #333;
+    flex-basis: 100%;
+  }
+  
+  .order-summary {
+    background-color: #f5f5f5;
+    padding: 10px 15px;
+    border-radius: 4px;
+    flex-grow: 1;
+  }
+  
+  .order-summary p {
+    margin: 0;
+    color: #555;
+    font-weight: 500;
   }
   
   .filter-controls {

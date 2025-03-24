@@ -77,20 +77,30 @@ export const WishlistProvider = ({ children, user }) => {
   const fetchWishlistItems = async (userId) => {
     if (!userId) {
       console.error("Cannot fetch wishlist: User ID is missing");
+      setWishlistItems([]);
       return;
     }
 
     try {
       const response = await fetch(`http://localhost:8080/api/wishlist/user/${userId}`);
-      const data = await response.json();
       if (response.ok) {
+        const data = await response.json();
         console.log("Fetched wishlist items:", data); // Debugging
-        setWishlistItems(data);
+        
+        // Ensure data is an array
+        if (Array.isArray(data)) {
+          setWishlistItems(data);
+        } else {
+          console.error('Wishlist data is not an array:', data);
+          setWishlistItems([]);
+        }
       } else {
-        console.error('Failed to fetch wishlist items:', data.message || data);
+        console.error('Failed to fetch wishlist items:', response.statusText);
+        setWishlistItems([]);
       }
     } catch (error) {
       console.error('Error fetching wishlist items:', error);
+      setWishlistItems([]);
     }
   };
 
@@ -154,13 +164,24 @@ export const WishlistProvider = ({ children, user }) => {
 
   const removeFromWishlist = async (wishlistId) => {
     try {
+      if (!wishlistId) {
+        console.error("Cannot remove from wishlist: Wishlist ID is missing");
+        return;
+      }
+      
       const userId = getUserId(user);
       if (!userId) {
         console.error("Cannot remove from wishlist: User ID is missing");
         return;
       }
 
-      const productId = wishlistItems.find(item => item.wishlistId === wishlistId)?.product?.productId;
+      // Safely find the item and extract productId
+      const item = Array.isArray(wishlistItems) 
+        ? wishlistItems.find(item => item.wishlistId === wishlistId)
+        : null;
+        
+      const productId = item?.product?.productId;
+      
       if (!productId) {
         console.error("Cannot remove from wishlist: Product ID is missing");
         return;
@@ -208,9 +229,19 @@ export const WishlistProvider = ({ children, user }) => {
   };
 
   const isInWishlist = async (productId) => {
-    if (!productId || !wishlistItems || wishlistItems.length === 0) return false;
+    if (!productId) {
+      console.warn("isInWishlist called with invalid productId");
+      return false;
+    }
+    
+    if (!wishlistItems || !Array.isArray(wishlistItems) || wishlistItems.length === 0) {
+      return false;
+    }
     
     return wishlistItems.some((item) => {
+      if (!item || !item.product) {
+        return false;
+      }
       const itemProductId = item.product.productId || item.product.id;
       return itemProductId === productId;
     });

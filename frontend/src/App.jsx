@@ -61,6 +61,7 @@ const App = () => {
         ...userData,
         id: userData.id || userData.userId, // Ensure `id` is set
         userId: userData.userId || userData.id, // Ensure `userId` is set
+        role: userData.role || userData.userRole || "USER" // Ensure role is set
       };
 
       console.log("Processed user data:", processedUserData);

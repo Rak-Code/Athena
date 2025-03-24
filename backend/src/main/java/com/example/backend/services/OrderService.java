@@ -21,7 +21,17 @@ public class OrderService {
 
     // Get all orders
     public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+        try {
+            // Use the custom query to get all orders sorted by ID
+            List<Order> orders = orderRepository.findAllOrderByOrderIdAsc();
+            System.out.println("OrderService: Retrieved " + orders.size() + " orders from database");
+            return orders;
+        } catch (Exception e) {
+            System.err.println("Error in OrderService.getAllOrders: " + e.getMessage());
+            e.printStackTrace();
+            // Re-throw the exception to be handled by the controller
+            throw e;
+        }
     }
 
     // Get order by ID
@@ -33,8 +43,67 @@ public class OrderService {
     public Order updateOrderStatus(Long orderId, Order.Status status) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+        
+        System.out.println("Updating order " + orderId + " status from " + order.getStatus() + " to " + status);
+        
+        // Validate status transition
+        if (!isValidStatusTransition(order.getStatus(), status)) {
+            throw new IllegalStateException(
+                "Invalid status transition from " + order.getStatus() + " to " + status
+            );
+        }
+        
+        // Set the new status
         order.setStatus(status);
-        return orderRepository.save(order);
+        
+        // If customer information is missing, try to populate it from the user
+        if ((order.getCustomerName() == null || order.getEmail() == null) && order.getUser() != null) {
+            System.out.println("Populating missing customer information from user data");
+            
+            // Set customer name if missing
+            if (order.getCustomerName() == null && order.getUser().getUsername() != null) {
+                order.setCustomerName(order.getUser().getUsername());
+            }
+            
+            // Set email if missing
+            if (order.getEmail() == null && order.getUser().getEmail() != null) {
+                order.setEmail(order.getUser().getEmail());
+            }
+        }
+        
+        Order updatedOrder = orderRepository.save(order);
+        
+        System.out.println("Order status updated successfully. New status: " + updatedOrder.getStatus());
+        
+        return updatedOrder;
+    }
+
+    // Helper method to validate status transitions
+    private boolean isValidStatusTransition(Order.Status currentStatus, Order.Status newStatus) {
+        if (currentStatus == null) return true;
+        
+        // Allow "updating" to the same status (no actual change)
+        if (currentStatus == newStatus) return true;
+        
+        switch (currentStatus) {
+            case PENDING:
+                // From PENDING, can only move to PROCESSING or CANCELLED
+                return newStatus == Order.Status.PROCESSING || newStatus == Order.Status.CANCELLED;
+            case PROCESSING:
+                // From PROCESSING, can only move to SHIPPED or CANCELLED
+                return newStatus == Order.Status.SHIPPED || newStatus == Order.Status.CANCELLED;
+            case SHIPPED:
+                // From SHIPPED, can only move to DELIVERED
+                return newStatus == Order.Status.DELIVERED;
+            case DELIVERED:
+                // Once DELIVERED, cannot change status
+                return false;
+            case CANCELLED:
+                // Once CANCELLED, cannot change status
+                return false;
+            default:
+                return false;
+        }
     }
 
     // Delete order

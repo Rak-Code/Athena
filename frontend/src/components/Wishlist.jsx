@@ -13,11 +13,14 @@ const Wishlist = () => {
 
   useEffect(() => {
     console.log("Wishlist Items:", wishlistItems); // Debugging
-    if (wishlistItems.length > 0) {
-      const itemDetails = wishlistItems.map(item => (
-        `Item: ${item.product.name || 'No name'}, ID: ${item.wishlistId || 'No ID'}, ProductID: ${item.product.productId || 'No ProductID'}`
+    // Ensure wishlistItems is an array
+    const items = Array.isArray(wishlistItems) ? wishlistItems : [];
+    
+    if (items.length > 0) {
+      const itemDetails = items.map(item => (
+        `Item: ${item.product?.name || 'No name'}, ID: ${item.wishlistId || 'No ID'}, ProductID: ${item.product?.productId || 'No ProductID'}`
       )).join('\n');
-      setDebugInfo(`Found ${wishlistItems.length} items:\n${itemDetails}`);
+      setDebugInfo(`Found ${items.length} items:\n${itemDetails}`);
     } else {
       setDebugInfo('No wishlist items found');
     }
@@ -43,10 +46,13 @@ const Wishlist = () => {
     );
   }
 
+  // Ensure wishlistItems is an array
+  const safeWishlistItems = Array.isArray(wishlistItems) ? wishlistItems : [];
+
   return (
     <Container className="py-5">
       <h2 className="text-center mb-4">My Wishlist</h2>
-      {wishlistItems.length === 0 ? (
+      {safeWishlistItems.length === 0 ? (
         <div className="text-center py-5">
           <h4>Your wishlist is empty</h4>
           <p className="text-muted">Add items to your wishlist to save them for later</p>
@@ -55,34 +61,42 @@ const Wishlist = () => {
       ) : (
         <>
           <Row xs={1} md={2} lg={4} className="g-4">
-            {wishlistItems.map(item => (
-              <Col key={item.wishlistId}>
-                <Card className="h-100 shadow-sm">
-                  <Link to={`/product/${item.product.productId}`}>
-                    <Card.Img 
-                      variant="top" 
-                      src={item.product.imageUrl || '/default-image.jpg'} 
-                      alt={item.product.name || 'Product Image'} 
-                      style={{ height: '200px', objectFit: 'cover' }} 
-                    />
-                  </Link>
-                  <Card.Body>
-                    <Link to={`/product/${item.product.productId}`} className="text-decoration-none">
-                      <Card.Title className="text-dark">{item.product.name || 'Unnamed Product'}</Card.Title>
+            {safeWishlistItems.map(item => {
+              // Check if item and item.product exist
+              if (!item || !item.product) {
+                console.log("Invalid wishlist item:", item);
+                return null;
+              }
+              
+              return (
+                <Col key={item.wishlistId || `item-${Math.random()}`}>
+                  <Card className="h-100 shadow-sm">
+                    <Link to={`/product/${item.product.productId}`}>
+                      <Card.Img 
+                        variant="top" 
+                        src={item.product.imageUrl || '/default-image.jpg'} 
+                        alt={item.product.name || 'Product Image'} 
+                        style={{ height: '200px', objectFit: 'cover' }} 
+                      />
                     </Link>
-                    <Card.Text className="text-primary fw-bold">₹{item.product.price || 'N/A'}</Card.Text>
-                    <div className="d-flex justify-content-between mt-3">
-                      <Button variant="outline-danger" size="sm" onClick={() => removeFromWishlist(item.wishlistId)}>
-                        <FaTrash /> Remove
-                      </Button>
-                      <Button variant="primary" className="px-3" onClick={() => handleAddToCart(item.product)}>
-                        <FaShoppingCart className="me-2" /> Add to Cart
-                      </Button>
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))}
+                    <Card.Body>
+                      <Link to={`/product/${item.product.productId}`} className="text-decoration-none">
+                        <Card.Title className="text-dark">{item.product.name || 'Unnamed Product'}</Card.Title>
+                      </Link>
+                      <Card.Text className="text-primary fw-bold">₹{item.product.price || 'N/A'}</Card.Text>
+                      <div className="d-flex justify-content-between mt-3">
+                        <Button variant="outline-danger" size="sm" onClick={() => removeFromWishlist(item.wishlistId)}>
+                          <FaTrash /> Remove
+                        </Button>
+                        <Button variant="primary" className="px-3" onClick={() => handleAddToCart(item.product)}>
+                          <FaShoppingCart className="me-2" /> Add to Cart
+                        </Button>
+                      </div>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              );
+            })}
           </Row>
         </>
       )}
