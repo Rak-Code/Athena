@@ -38,7 +38,7 @@ const Dashboard = () => {
       // Add timestamp to prevent caching
       const timestamp = new Date().getTime();
       
-      // Fetch orders
+      // Fetch orders with cache-busting parameter
       const ordersResponse = await axios.get(`http://localhost:8080/api/orders?_t=${timestamp}`, {
         withCredentials: true
       });
@@ -60,7 +60,7 @@ const Dashboard = () => {
         totalAmount: order.totalAmount || 0
       }));
       
-      // Fetch products
+      // Fetch products with cache-busting parameter
       const productsResponse = await axios.get(`http://localhost:8080/api/products?_t=${timestamp}`, {
         withCredentials: true
       });

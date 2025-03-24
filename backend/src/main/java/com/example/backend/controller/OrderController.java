@@ -40,15 +40,22 @@ public class OrderController {
             String customerName = (String) orderRequest.get("customerName");
             String email = (String) orderRequest.get("email");
             String phone = (String) orderRequest.get("phone");
+            Long userId = orderRequest.get("userId") != null ? Long.parseLong(orderRequest.get("userId").toString()) : null;
 
-            // Find or create a user for this order
-            User user = userRepository.findByEmail(email).orElseGet(() -> {
-                User newUser = new User();
-                newUser.setUsername(customerName);
-                newUser.setEmail(email);
-                newUser.setPassword("guest-" + System.currentTimeMillis()); // Temporary password
-                return userRepository.save(newUser);
-            });
+            // Find user by ID first, then by email if ID not found
+            User user;
+            if (userId != null) {
+                user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+            } else {
+                user = userRepository.findByEmail(email).orElseGet(() -> {
+                    User newUser = new User();
+                    newUser.setUsername(customerName);
+                    newUser.setEmail(email);
+                    newUser.setPassword("guest-" + System.currentTimeMillis()); // Temporary password
+                    return userRepository.save(newUser);
+                });
+            }
 
             // Extract cart items
             List<Map<String, Object>> cartItems = (List<Map<String, Object>>) orderRequest.get("cartItems");

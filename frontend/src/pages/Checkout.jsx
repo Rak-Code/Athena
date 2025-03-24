@@ -42,10 +42,19 @@ const Checkout = () => {
     setLoading(true);
     setError(null);
 
+    // Get user data from localStorage
+    const userData = JSON.parse(localStorage.getItem('user'));
+    if (!userData || !userData.id) {
+      setError("Please log in to place an order");
+      setLoading(false);
+      return;
+    }
+
     // Format the shipping and billing addresses
     const formattedAddress = `${formData.addressLine1}, ${formData.city}, ${formData.state}, ${formData.postalCode}, ${formData.country}`;
 
     const orderData = {
+      userId: userData.id,
       customerName: formData.fullName,
       email: formData.email,
       phone: formData.phone,
