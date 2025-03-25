@@ -20,10 +20,15 @@ import {
   FaStar,
   FaEnvelope,
   FaEdit,
-  FaTrash
+  FaTrash,
+  FaGift,
+  FaUserFriends
 } from "react-icons/fa";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
+import ContactUsForm from "../components/ContactUsForm";
+import GiftCards from "../components/GiftCards";
+import InviteFriends from "../components/InviteFriends";
 
 const MyProfile = () => {
   const navigate = useNavigate();
@@ -204,14 +209,11 @@ const MyProfile = () => {
 
       {/* MAIN PROFILE SECTION */}
       <Container className="pb-5" style={{ maxWidth: "1400px" }}>
-        {/* Page Title */}
-        {/* <h2 className="mb-4 fw-bold text-dark">My Profile</h2> */}
-
         <Tab.Container defaultActiveKey="accountDetails">
           <Row>
             {/* LEFT NAVIGATION COLUMN */}
             <Col md={3} className="mb-4">
-              <Nav className="flex-column ">
+              <Nav className="flex-column">
                 {/* PROFILE SECTION */}
                 <h6 className="text-uppercase text-muted mb-2 px-3">Profile</h6>
                 <Nav.Item>
@@ -224,8 +226,6 @@ const MyProfile = () => {
                     Shipping Addresses
                   </Nav.Link>
                 </Nav.Item>
-
-                
 
                 {/* ACCOUNT SECTION */}
                 <h6 className="text-uppercase text-muted mt-4 mb-2 px-3">Account</h6>
@@ -247,25 +247,10 @@ const MyProfile = () => {
                     Returns &amp; Refunds
                   </Nav.Link>
                 </Nav.Item>
-                <Nav.Item>
-                  <Nav.Link eventKey="giftCards" className="py-2 px-3">
-                    Gift Cards
-                  </Nav.Link>
-                </Nav.Item>
-                <Nav.Item>
-                  <Nav.Link eventKey="inviteFriends" className="py-2 px-3">
-                    Invite Friends, Get $20
-                  </Nav.Link>
-                </Nav.Item>
-                <Nav.Item>
-                  <Nav.Link eventKey="storeCredit" className="py-2 px-3">
-                    Store Credit
-                  </Nav.Link>
-                </Nav.Item>
-              
 
-                {/* EXTRA: WISHLIST, REVIEWS, CONTACT (from original code) */}
-                <Nav.Item className="mt-4">
+                {/* ACTIVITIES SECTION */}
+                <h6 className="text-uppercase text-muted mt-4 mb-2 px-3">Activities</h6>
+                <Nav.Item>
                   <Nav.Link
                     eventKey="wishlist"
                     className="py-2 px-3 d-flex align-items-center"
@@ -296,13 +281,28 @@ const MyProfile = () => {
                     Contact Us
                   </Nav.Link>
                 </Nav.Item>
+
+                {/* REWARDS SECTION - MOVED TO BOTTOM */}
+                <h6 className="text-uppercase text-muted mt-4 mb-2 px-3">Rewards</h6>
+                <Nav.Item>
+                  <Nav.Link eventKey="giftCards" className="py-2 px-3 d-flex align-items-center">
+                    <FaGift className="me-2" />
+                    Gift Cards
+                  </Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link eventKey="inviteFriends" className="py-2 px-3 d-flex align-items-center">
+                    <FaUserFriends className="me-2" />
+                    Invite Friends
+                  </Nav.Link>
+                </Nav.Item>
               </Nav>
             </Col>
 
             {/* RIGHT CONTENT COLUMN */}
             <Col md={9}>
               <Tab.Content>
-                {/* ACCOUNT DETAILS TAB (original "profile") */}
+                {/* ACCOUNT DETAILS TAB */}
                 <Tab.Pane eventKey="accountDetails">
                   <h4 className="mb-4 fw-bold text-dark">Account Details</h4>
                   <Row className="g-4">
@@ -337,7 +337,7 @@ const MyProfile = () => {
                   </Row>
                 </Tab.Pane>
 
-                {/* SHIPPING ADDRESSES (placeholder) */}
+                {/* SHIPPING ADDRESSES */}
                 <Tab.Pane eventKey="shippingAddresses">
                   <h4 className="mb-4 fw-bold text-dark">Shipping Addresses</h4>
                   <p className="text-muted">
@@ -345,43 +345,7 @@ const MyProfile = () => {
                   </p>
                 </Tab.Pane>
 
-                {/* EMAIL PREFERENCES (placeholder) */}
-                <Tab.Pane eventKey="emailPreferences">
-                  <h4 className="mb-4 fw-bold text-dark">Email Preferences</h4>
-                  <p className="text-muted">
-                    Manage how you receive emails from us. (Placeholder)
-                  </p>
-                </Tab.Pane>
-
-                {/* TEXT MESSAGE PREFERENCES (placeholder) */}
-                <Tab.Pane eventKey="textMessagePreferences">
-                  <h4 className="mb-4 fw-bold text-dark">
-                    Text Message Preferences
-                  </h4>
-                  <p className="text-muted">
-                    Manage SMS notifications. (Placeholder)
-                  </p>
-                </Tab.Pane>
-
-                {/* PUSH NOTIFICATION PREFERENCES (placeholder) */}
-                <Tab.Pane eventKey="pushNotificationPreferences">
-                  <h4 className="mb-4 fw-bold text-dark">
-                    Push Notification Preferences
-                  </h4>
-                  <p className="text-muted">
-                    Manage push notifications. (Placeholder)
-                  </p>
-                </Tab.Pane>
-
-                {/* APP PREFERENCES (placeholder) */}
-                <Tab.Pane eventKey="appPreferences">
-                  <h4 className="mb-4 fw-bold text-dark">App Preferences</h4>
-                  <p className="text-muted">
-                    Customize your in-app experience. (Placeholder)
-                  </p>
-                </Tab.Pane>
-
-                {/* ORDER HISTORY TAB (original "orders") */}
+                {/* ORDER HISTORY TAB */}
                 <Tab.Pane eventKey="orderHistory">
                   <h4 className="mb-4 fw-bold text-dark">Order History</h4>
                   {orders.length > 0 ? (
@@ -419,8 +383,8 @@ const MyProfile = () => {
                                   order.status === "PENDING"
                                     ? "secondary"
                                     : order.status === "PROCESSING"
-                                    ? "warning"
-                                    : "success"
+                                      ? "warning"
+                                      : "success"
                                 }
                               >
                                 {order.status}
@@ -455,7 +419,7 @@ const MyProfile = () => {
                   )}
                 </Tab.Pane>
 
-                {/* RETURNS & REFUNDS (placeholder) */}
+                {/* RETURNS & REFUNDS */}
                 <Tab.Pane eventKey="returnsRefunds">
                   <h4 className="mb-4 fw-bold text-dark">Returns &amp; Refunds</h4>
                   <p className="text-muted">
@@ -463,61 +427,28 @@ const MyProfile = () => {
                   </p>
                 </Tab.Pane>
 
-                {/* GIFT CARDS (placeholder) */}
+                {/* GIFT CARDS */}
                 <Tab.Pane eventKey="giftCards">
-                  <h4 className="mb-4 fw-bold text-dark">Gift Cards</h4>
-                  <p className="text-muted">
-                    Manage or purchase gift cards. (Placeholder)
-                  </p>
+                  <GiftCards />
                 </Tab.Pane>
 
-                {/* INVITE FRIENDS (placeholder) */}
+                {/* INVITE FRIENDS */}
                 <Tab.Pane eventKey="inviteFriends">
-                  <h4 className="mb-4 fw-bold text-dark">
-                    Invite Friends, Get $20
-                  </h4>
-                  <p className="text-muted">
-                    Share your referral link with friends. (Placeholder)
-                  </p>
+                  <InviteFriends />
                 </Tab.Pane>
 
-                {/* STORE CREDIT (placeholder) */}
-                <Tab.Pane eventKey="storeCredit">
-                  <h4 className="mb-4 fw-bold text-dark">Store Credit</h4>
-                  <p className="text-muted">
-                    Check and use your store credit. (Placeholder)
-                  </p>
-                </Tab.Pane>
-
-                {/* THREAD POINTS (placeholder) */}
-                <Tab.Pane eventKey="threadPoints">
-                  <h4 className="mb-4 fw-bold text-dark">Thread Points</h4>
-                  <p className="text-muted">
-                    View and redeem your Thread Points. (Placeholder)
-                  </p>
-                </Tab.Pane>
-
-                {/* THREAD PAY (placeholder) */}
-                <Tab.Pane eventKey="threadPay">
-                  <h4 className="mb-4 fw-bold text-dark">Thread Pay</h4>
-                  <p className="text-muted">
-                    Manage your Thread Pay settings. (Placeholder)
-                  </p>
-                </Tab.Pane>
-
-                {/* WISHLIST TAB (original) */}
+                {/* WISHLIST TAB */}
                 <Tab.Pane eventKey="wishlist">
                   <h4 className="mb-4 fw-bold text-dark">My Wishlist</h4>
                   {wishlist.length > 0 ? (
                     <Row xs={1} md={2} lg={3} className="g-4">
                       {wishlist.map((item) => {
-                        // Handle different possible data structures for wishlist items
                         const product = item.product || item;
                         const productId = product.productId || product.id;
                         const imageUrl = product.imageUrl || "https://via.placeholder.com/150";
                         const name = product.name || "Product";
                         const price = product.price || 0;
-                        
+
                         return (
                           <Col key={item.id || productId}>
                             <Card className="h-100 shadow-sm border-0 rounded-3 overflow-hidden">
@@ -547,8 +478,7 @@ const MyProfile = () => {
                                     className="text-danger p-0"
                                     onClick={() => {
                                       removeFromWishlist(productId);
-                                      // Also remove from local wishlist state
-                                      setWishlist(wishlist.filter(w => 
+                                      setWishlist(wishlist.filter(w =>
                                         (w.product?.productId || w.product?.id || w.productId || w.id) !== productId
                                       ));
                                     }}
@@ -579,7 +509,7 @@ const MyProfile = () => {
                   )}
                 </Tab.Pane>
 
-                {/* REVIEWS TAB (original) */}
+                {/* REVIEWS TAB */}
                 <Tab.Pane eventKey="reviews">
                   <h4 className="mb-4 fw-bold text-dark">My Reviews</h4>
                   {reviews.length > 0 ? (
@@ -598,11 +528,10 @@ const MyProfile = () => {
                                 {[...Array(5)].map((_, i) => (
                                   <FaStar
                                     key={i}
-                                    className={`me-1 ${
-                                      i < review.rating
+                                    className={`me-1 ${i < review.rating
                                         ? "text-warning"
                                         : "text-muted"
-                                    }`}
+                                      }`}
                                     style={{ fontSize: "1.2rem" }}
                                   />
                                 ))}
@@ -653,77 +582,10 @@ const MyProfile = () => {
                   )}
                 </Tab.Pane>
 
-                {/* CONTACT US TAB (original) */}
+                {/* CONTACT US TAB */}
                 <Tab.Pane eventKey="contactUs">
                   <h4 className="mb-4 fw-bold text-dark">Contact Us</h4>
-                  <Form className="mb-5">
-                    <Form.Group className="mb-4">
-                      <Form.Label className="fw-medium">Subject</Form.Label>
-                      <Form.Control
-                        type="text"
-                        placeholder="Enter subject"
-                        className="rounded-3 py-2"
-                      />
-                    </Form.Group>
-                    <Form.Group className="mb-4">
-                      <Form.Label className="fw-medium">Message</Form.Label>
-                      <Form.Control
-                        as="textarea"
-                        rows={5}
-                        placeholder="Enter your message"
-                        className="rounded-3 py-2"
-                      />
-                    </Form.Group>
-                    <Button
-                      variant="dark"
-                      type="submit"
-                      className="rounded-pill px-4 fw-medium"
-                    >
-                      Send Message
-                    </Button>
-                  </Form>
-
-                  <hr className="my-5" />
-
-                  <h5 className="mb-4 text-dark fw-bold">
-                    Other Ways to Contact Us
-                  </h5>
-                  <Row className="g-4">
-                    <Col md={6}>
-                      <Card className="border-0 shadow-sm h-100 rounded-3">
-                        <Card.Body className="p-4">
-                          <h6 className="fw-bold mb-3">Customer Support</h6>
-                          <div className="d-flex align-items-center mb-2">
-                            <FaEnvelope className="me-2 text-dark" />
-                            <span>support@athena.com</span>
-                          </div>
-                          <div className="d-flex align-items-center">
-                            <FaStar className="me-2 text-dark" />
-                            <span>+1 (123) 456-7890</span>
-                          </div>
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                    <Col md={6}>
-                      <Card className="border-0 shadow-sm h-100 rounded-3">
-                        <Card.Body className="p-4">
-                          <h6 className="fw-bold mb-3">Business Hours</h6>
-                          <div className="mb-2">
-                            <p className="mb-1 fw-medium">Monday - Friday</p>
-                            <p className="text-muted">9:00 AM - 6:00 PM</p>
-                          </div>
-                          <div className="mb-2">
-                            <p className="mb-1 fw-medium">Saturday</p>
-                            <p className="text-muted">10:00 AM - 4:00 PM</p>
-                          </div>
-                          <div>
-                            <p className="mb-1 fw-medium">Sunday</p>
-                            <p className="text-muted">Closed</p>
-                          </div>
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                  </Row>
+                  <ContactUsForm />
                 </Tab.Pane>
               </Tab.Content>
             </Col>

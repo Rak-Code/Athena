@@ -3,6 +3,7 @@ import { Container, Nav } from "react-bootstrap";
 import CarouselComponent from "../components/CarouselComponent";
 import ProductList from "../components/ProductList";
 import Footer from "../components/Footer";
+import NewsletterSubscription from "../components/NewsletterSubscription"; // Import the new component
 
 const Home = ({ searchTerm }) => {
   const [activeTab, setActiveTab] = useState("home");
@@ -82,6 +83,9 @@ const Home = ({ searchTerm }) => {
           <ProductList categoryId={categoryId} />
         </>
       )}
+
+      {/* Add Newsletter Subscription Component */}
+      <NewsletterSubscription />
 
       <Footer />
     </Container>

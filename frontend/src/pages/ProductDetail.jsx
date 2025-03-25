@@ -18,6 +18,10 @@ const ProductDetail = () => {
   const { addToWishlist, removeByUserAndProduct, isInWishlist, user } = useWishlist();
   const [addingToWishlist, setAddingToWishlist] = useState(false);
   const [inWishlist, setInWishlist] = useState(false);
+  const [couponCode, setCouponCode] = useState(""); // Added coupon code state
+  const [discount, setDiscount] = useState(0);
+  const [couponApplied, setCouponApplied] = useState(false);
+
 
   useEffect(() => {
     if (!id) {
@@ -34,7 +38,7 @@ const ProductDetail = () => {
         return response.json();
       })
       .then((data) => {
-        console.log("Fetched product:", data); // Debugging
+        console.log("Fetched product:", data);
         setProduct(data);
         setLoading(false);
       })
@@ -47,7 +51,7 @@ const ProductDetail = () => {
 
   // Check if the product is in the user's wishlist
   useEffect(() => {
-    console.log("User object in ProductDetail:", user); // Debugging
+    console.log("User object in ProductDetail:", user);
     if (product && user) {
       try {
         const productId = product.productId || product.id;
@@ -60,6 +64,7 @@ const ProductDetail = () => {
     }
   }, [product, isInWishlist, user]);
 
+
   const handleAddToCart = () => {
     if (!selectedSize) {
       setMessage("Please select a size");
@@ -69,13 +74,14 @@ const ProductDetail = () => {
     setAddingToCart(true);
     console.log("Adding product to cart:", product);
     console.log("Product ID:", product.productId || product.id);
-    
+
     const variant = { size: selectedSize };
     addToCart({
       ...product,
-      productId: product.productId || product.id // Ensure we have the product ID
+      productId: product.productId || product.id, // Ensure we have the product ID
+      price: product.price - discount // Subtract discount when adding to cart
     }, variant, quantity);
-    
+
     setMessage("Added to cart!");
     setAddingToCart(false);
 
@@ -91,7 +97,7 @@ const ProductDetail = () => {
       console.log("User ID:", user.id);
       console.log("User userId:", user.userId);
     }
-    
+
     // Check if user is logged in - only check if user exists, not the ID properties
     if (!user) {
       console.log("User not logged in");
@@ -103,7 +109,7 @@ const ProductDetail = () => {
     try {
       const productId = product.productId || product.id;
       console.log("Handling wishlist for product ID:", productId);
-      
+
       if (inWishlist) {
         // Use removeByUserAndProduct instead of removeFromWishlist
         removeByUserAndProduct(productId);
@@ -119,7 +125,7 @@ const ProductDetail = () => {
           imageUrl: product.imageUrl,
           description: product.description
         };
-        
+
         console.log("Adding product to wishlist:", productToAdd);
         addToWishlist(productToAdd);
         setInWishlist(true);
@@ -143,6 +149,26 @@ const ProductDetail = () => {
     }
   };
 
+
+
+  const handleApplyCoupon = () => {
+    // Replace 'VALID_COUPON' with the actual coupon code you want to use
+    const VALID_COUPON = "DISCOUNT200";
+
+    if (couponCode === VALID_COUPON && !couponApplied) {
+      setDiscount(200); // Set the discount amount
+      setCouponApplied(true);
+      setMessage("Coupon Applied! ₹200 off.");
+    } else if (couponApplied) {
+      setMessage("Coupon already applied.");
+    } else {
+      setMessage("Invalid coupon code.");
+    }
+
+    setTimeout(() => setMessage(""), 3000);
+  };
+
+
   if (loading) return <p className="text-center text-gray-500 text-lg">Loading...</p>;
 
   return (
@@ -164,7 +190,36 @@ const ProductDetail = () => {
           {/* Product Info */}
           <div className="flex flex-col gap-6">
             <h1 className="text-4xl font-bold text-gray-800">{product.name}</h1>
-            <p className="text-3xl font-semibold text-gray-900">₹{product.price}</p>
+            <p className="text-3xl font-semibold text-gray-900">
+              ₹{(product.price - discount).toFixed(2)}
+            </p>
+
+            {/* Coupon Code Input */}
+            <div className="mb-4">
+              <label htmlFor="couponCode" className="block text-gray-700 text-sm font-bold mb-2">
+                Coupon Code:
+              </label>
+              <div className="flex">
+                <input
+                  type="text"
+                  id="couponCode"
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  placeholder="Enter coupon code"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                />
+                <button
+                  className="ml-2 px-4 py-2 font-bold text-sm text-white bg-blue-500 hover:bg-blue-700 rounded focus:outline-none focus:shadow-outline"
+                  type="button"
+                  onClick={handleApplyCoupon}
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+
+
+
             <p className="text-gray-600 text-lg leading-relaxed">{product.description}</p>
 
             {/* Size Selection */}
@@ -174,9 +229,9 @@ const ProductDetail = () => {
                 {["S", "M", "L", "XL"].map((size) => (
                   <button
                     key={size}
-                    className={`px-4 py-2 border rounded-full text-sm font-medium transition-all duration-300 
-                      ${selectedSize === size 
-                        ? "bg-blue-600 text-white border-blue-600 shadow-md" 
+                    className={`px-4 py-2 border rounded-full text-sm font-medium transition-all duration-300
+                      ${selectedSize === size
+                        ? "bg-blue-600 text-white border-blue-600 shadow-md"
                         : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100 hover:border-gray-400"
                       } focus:outline-none focus:ring-2 focus:ring-blue-300 active:scale-95`}
                     onClick={() => setSelectedSize(size)}
@@ -211,8 +266,8 @@ const ProductDetail = () => {
             <div className="flex gap-4 mb-6">
               <button
                 className={`flex items-center gap-2 px-6 py-3 rounded-pill text-sm font-semibold transition-all duration-300 shadow-md
-                  ${inWishlist 
-                    ? "bg-red-500 text-white hover:bg-red-600" 
+                  ${inWishlist
+                    ? "bg-red-500 text-white hover:bg-red-600"
                     : "bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200"
                   } ${addingToWishlist ? "opacity-50 cursor-not-allowed" : ""}`}
                 onClick={handleWishlist}
