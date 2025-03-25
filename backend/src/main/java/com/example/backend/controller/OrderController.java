@@ -44,6 +44,17 @@ public class OrderController {
             String phone = (String) orderRequest.get("phone");
             Long userId = orderRequest.get("userId") != null ? Long.parseLong(orderRequest.get("userId").toString()) : null;
 
+            // Validate required fields
+            if (customerName == null || customerName.trim().isEmpty()) {
+                throw new IllegalArgumentException("Customer name is required");
+            }
+            if (email == null || email.trim().isEmpty()) {
+                throw new IllegalArgumentException("Email is required");
+            }
+            if (phone == null || phone.trim().isEmpty()) {
+                throw new IllegalArgumentException("Phone number is required");
+            }
+
             System.out.println("Processing order for user ID: " + userId);
 
             // Find user by ID first, then by email if ID not found
@@ -67,7 +78,7 @@ public class OrderController {
             System.out.println("Received cart items: " + cartItems);
 
             if (cartItems == null || cartItems.isEmpty()) {
-                throw new RuntimeException("No cart items provided");
+                throw new IllegalArgumentException("No cart items provided");
             }
 
             // Calculate total amount
@@ -77,20 +88,31 @@ public class OrderController {
                 
                 Object priceObj = item.get("price");
                 Object quantityObj = item.get("quantity");
-                Object idObj = item.get("id");
+                Object productIdObj = item.get("productId");
                 
-                if (priceObj == null || quantityObj == null || idObj == null) {
+                if (priceObj == null || quantityObj == null || productIdObj == null) {
                     System.out.println("Missing required fields in cart item:");
                     System.out.println("price: " + priceObj);
                     System.out.println("quantity: " + quantityObj);
-                    System.out.println("id: " + idObj);
-                    throw new RuntimeException("Cart item is missing required fields");
+                    System.out.println("productId: " + productIdObj);
+                    throw new IllegalArgumentException("Cart item is missing required fields");
                 }
 
-                BigDecimal price = new BigDecimal(priceObj.toString());
-                int quantity = Integer.parseInt(quantityObj.toString());
-                totalAmount = totalAmount.add(price.multiply(new BigDecimal(quantity)));
-                System.out.println("Processing item: ID=" + idObj + ", quantity=" + quantity + ", price=" + price);
+                try {
+                    BigDecimal price = new BigDecimal(priceObj.toString());
+                    int quantity = Integer.parseInt(quantityObj.toString());
+                    Long productId = Long.parseLong(productIdObj.toString());
+                    
+                    // Validate the product exists
+                    if (!productRepository.existsById(productId)) {
+                        throw new IllegalArgumentException("Product not found with ID: " + productId);
+                    }
+                    
+                    totalAmount = totalAmount.add(price.multiply(new BigDecimal(quantity)));
+                    System.out.println("Processing item: ID=" + productId + ", quantity=" + quantity + ", price=" + price);
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Invalid number format in cart item: " + e.getMessage());
+                }
             }
 
             // Create the order
@@ -109,17 +131,13 @@ public class OrderController {
             String billingAddress = (String) orderRequest.get("billingAddress");
             String paymentMethod = (String) orderRequest.get("paymentMethod");
             
-            if (shippingAddress != null) {
-                order.setShippingAddress(shippingAddress);
+            if (shippingAddress == null || shippingAddress.trim().isEmpty()) {
+                throw new IllegalArgumentException("Shipping address is required");
             }
             
-            if (billingAddress != null) {
-                order.setBillingAddress(billingAddress);
-            }
-            
-            if (paymentMethod != null) {
-                order.setPaymentMethod(paymentMethod);
-            }
+            order.setShippingAddress(shippingAddress);
+            order.setBillingAddress(billingAddress != null ? billingAddress : shippingAddress);
+            order.setPaymentMethod(paymentMethod != null ? paymentMethod : "cod");
 
             Order savedOrder = orderService.createOrder(order);
             System.out.println("Created order with ID: " + savedOrder.getOrderId());
@@ -129,7 +147,7 @@ public class OrderController {
             System.out.println("Processing " + cartItems.size() + " cart items");
             
             for (Map<String, Object> item : cartItems) {
-                Long productId = Long.parseLong(item.get("id").toString());
+                Long productId = Long.parseLong(item.get("productId").toString());
                 int quantity = Integer.parseInt(item.get("quantity").toString());
                 BigDecimal price = new BigDecimal(item.get("price").toString());
 
@@ -154,7 +172,7 @@ public class OrderController {
                     orderDetailsList.add(orderDetailResponse);
                 } else {
                     System.out.println("Product not found with ID: " + productId);
-                    throw new RuntimeException("Product not found with ID: " + productId);
+                    throw new IllegalArgumentException("Product not found with ID: " + productId);
                 }
             }
 
@@ -167,10 +185,13 @@ public class OrderController {
             response.put("orderItems", orderDetailsList);
 
             return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
         } catch (Exception e) {
             e.printStackTrace();
-
-            // FIXED: Changed errorResponse type to Map<String, Object> instead of Map<String, String>
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", "Error creating order: " + e.getMessage());
             return ResponseEntity.status(500).body(errorResponse);

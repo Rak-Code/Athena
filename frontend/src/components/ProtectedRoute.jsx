@@ -10,9 +10,19 @@ const ProtectedRoute = ({ user, requiredRole, children }) => {
     console.log("ProtectedRoute - Current path:", location.pathname);
   }, [user, requiredRole, location]);
 
-  // If user is not logged in, redirect to login with return path
+  // Check if we have a stored user when no user prop is provided
   if (!user) {
-    console.log("ProtectedRoute - User not logged in, redirecting to login");
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser && (!requiredRole || parsedUser.role === requiredRole)) {
+          return children;
+        }
+      } catch (error) {
+        console.error("Error parsing stored user:", error);
+      }
+    }
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
   
@@ -23,7 +33,6 @@ const ProtectedRoute = ({ user, requiredRole, children }) => {
   }
 
   // If user is authenticated and has the required role, render the protected component
-  console.log("ProtectedRoute - Access granted");
   return children;
 };
 

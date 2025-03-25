@@ -28,12 +28,21 @@ export const CartProvider = ({ children }) => {
   };
 
   const addToCart = (product, variant, quantity) => {
+    console.log("Adding to cart:", product);
+    
+    // Ensure we have a valid product ID
+    const productId = parseInt(product.productId || product.id);
+    if (!productId) {
+      console.error("Invalid product ID:", product);
+      return;
+    }
+    
     setCart(prevCart => {
       // Check if the item already exists in the cart
       const existingItemIndex = prevCart.findIndex(
-        item => item.productId === product.productId && 
-                item.variantSize === variant.size && 
-                item.variantColor === variant.color
+        item => parseInt(item.productId) === productId && 
+                item.variantSize === variant?.size && 
+                item.variantColor === variant?.color
       );
 
       if (existingItemIndex >= 0) {
@@ -43,30 +52,34 @@ export const CartProvider = ({ children }) => {
         return updatedCart;
       } else {
         // Add new item to cart
+        console.log("Adding new item with productId:", productId);
         return [...prevCart, {
-          id: Date.now().toString(),
-          productId: product.productId || product.id,
+          productId: productId,
           name: product.name,
-          price: product.price,
+          price: parseFloat(product.price),
           imageUrl: product.imageUrl,
-          variantSize: variant.size,
-          variantColor: variant.color,
-          quantity: quantity
+          variantSize: variant?.size || null,
+          variantColor: variant?.color || null,
+          quantity: parseInt(quantity)
         }];
       }
     });
   };
 
-  const updateCartItem = (itemId, newQuantity) => {
+  const updateCartItem = (productId, newQuantity) => {
     setCart(prevCart => 
       prevCart.map(item => 
-        item.id === itemId ? { ...item, quantity: newQuantity } : item
+        parseInt(item.productId) === parseInt(productId) 
+          ? { ...item, quantity: parseInt(newQuantity) } 
+          : item
       )
     );
   };
 
-  const removeFromCart = (itemId) => {
-    setCart(prevCart => prevCart.filter(item => item.id !== itemId));
+  const removeFromCart = (productId) => {
+    setCart(prevCart => 
+      prevCart.filter(item => parseInt(item.productId) !== parseInt(productId))
+    );
   };
 
   return (

@@ -34,7 +34,9 @@ const Checkout = () => {
   };
 
   const clearCart = () => {
-    cart.forEach(item => removeFromCart(item.id));
+    cart.forEach(item => {
+      removeFromCart(item.productId);
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -42,71 +44,144 @@ const Checkout = () => {
     setLoading(true);
     setError(null);
 
-    // Get user data from localStorage
-    const userData = JSON.parse(localStorage.getItem('user'));
-    if (!userData || !userData.id) {
-      setError("Please log in to place an order");
+    // Validate address fields
+    if (!formData.addressLine1 || !formData.city || !formData.state || !formData.postalCode || !formData.country) {
+      setError("Please fill in all address fields");
       setLoading(false);
       return;
     }
 
-    // Format the shipping and billing addresses
-    const formattedAddress = `${formData.addressLine1}, ${formData.city}, ${formData.state}, ${formData.postalCode}, ${formData.country}`;
-
-    const orderData = {
-      userId: userData.id,
-      customerName: formData.fullName,
-      email: formData.email,
-      phone: formData.phone,
-      shippingAddress: formattedAddress,
-      billingAddress: formattedAddress, // Using the same address for both
-      paymentMethod: formData.paymentMethod,
-      cartItems: cart.map(item => {
-        console.log("Processing cart item:", item);
-        const cartItem = {
-          id: item.productId,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity
-        };
-        console.log("Formatted cart item:", cartItem);
-        return cartItem;
-      })
-    };
-
-    console.log("Original cart items:", cart);
-    console.log("Formatted cart items:", orderData.cartItems);
-    console.log("Full order data being sent:", JSON.stringify(orderData, null, 2));
-
     try {
-      const response = await axios.post("http://localhost:8080/api/orders", orderData, {
-        withCredentials: true,
-        headers: { "Content-Type": "application/json" }
-      });
+      // Get user data from localStorage
+      const userStr = localStorage.getItem('user');
+      console.log("Raw user string from localStorage:", userStr);
+      
+      if (!userStr) {
+        setError("Please log in to place an order");
+        setLoading(false);
+        return;
+      }
 
-      console.log("Order Response:", response.data);
+      let userData;
+      try {
+        userData = JSON.parse(userStr);
+        console.log("Parsed user data:", userData);
+        
+        // Validate the user data structure
+        if (!userData || typeof userData !== 'object') {
+          throw new Error("Invalid user data structure");
+        }
+        
+        // Ensure we have a valid user ID
+        if (!userData.id && !userData.userId) {
+          throw new Error("User ID not found. Please log in again.");
+        }
+        
+        // Use the first available ID
+        const userId = parseInt(userData.id || userData.userId);
+        if (isNaN(userId)) {
+          throw new Error("Invalid user ID format");
+        }
+        
+        // Format the address string
+        const formattedAddress = `${formData.addressLine1}, ${formData.city}, ${formData.state}, ${formData.postalCode}, ${formData.country}`;
 
-      if (response.data && response.data.orderId) {
-        const orderId = response.data.orderId;
-        console.log("Extracted orderId:", orderId);
+        // Validate cart items
+        if (!cart || cart.length === 0) {
+          throw new Error("Your cart is empty");
+        }
 
-        // Store order in localStorage as backup
-        localStorage.setItem("lastOrder", JSON.stringify({
-          orderId,
-          totalAmount: response.data.totalAmount,
-          status: response.data.status,
-          orderDate: response.data.orderDate
+        // Prepare order data
+        const orderData = {
+          userId: userId,
+          customerName: formData.fullName || userData.username,
+          email: formData.email || userData.email,
+          phone: formData.phone,
+          shippingAddress: formattedAddress,
+          billingAddress: formattedAddress,
+          paymentMethod: formData.paymentMethod,
+          cartItems: cart.map(item => {
+            // Validate required fields
+            if (!item.productId) {
+              throw new Error(`Missing productId for item: ${item.name || 'unknown item'}`);
+            }
+            if (!item.name) {
+              throw new Error(`Missing name for item with ID: ${item.productId}`);
+            }
+            if (!item.price) {
+              throw new Error(`Missing price for item: ${item.name}`);
+            }
+            if (!item.quantity) {
+              throw new Error(`Missing quantity for item: ${item.name}`);
+            }
+            
+            return {
+              productId: parseInt(item.productId),
+              name: item.name,
+              price: parseFloat(item.price),
+              quantity: parseInt(item.quantity),
+              variantSize: item.variantSize || null,
+              variantColor: item.variantColor || null
+            };
+          })
+        };
+
+        console.log("Sending order data:", orderData);
+
+        // Send order to backend
+        const response = await axios.post('http://localhost:8080/api/orders', orderData, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log("Order creation successful. Response:", response.data);
+
+        // Clear the cart
+        clearCart();
+
+        // Get the order ID from the response
+        const orderId = response.data.orderId || response.data.id;
+        if (!orderId) {
+          console.error("Order created but no order ID in response:", response.data);
+          throw new Error("Order ID not found in response");
+        }
+
+        // Store order data in localStorage as backup
+        localStorage.setItem('lastOrder', JSON.stringify({
+          order: response.data,
+          timestamp: new Date().getTime()
         }));
 
-        clearCart();
-        navigate(`/order-confirmation/${orderId}`, { state: { orderId } });
-      } else {
-        console.error("Order created but no order ID returned:", response.data);
-        setError("Order was placed but we couldn't retrieve the order details. Please check your orders.");
+        // Navigate to order confirmation with order ID
+        navigate(`/order-confirmation/${orderId}`, { 
+          state: { 
+            orderDetails: response.data,
+            customerName: formData.fullName || userData.username,
+            email: formData.email || userData.email
+          } 
+        });
+
+      } catch (parseError) {
+        console.error("Error processing user data:", parseError);
+        setError(parseError.message || "Error processing user data. Please try logging in again.");
+        setLoading(false);
+        return;
       }
-    } catch (err) {
-      console.error("Error placing order:", err);
-      setError("Failed to place order. Please try again.");
+    } catch (error) {
+      console.error("Error creating order:", error);
+      
+      if (error.response) {
+        console.error("Server error data:", error.response.data);
+        console.error("Server error status:", error.response.status);
+        setError(error.response.data?.error || "Error creating order. Please try again.");
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+        setError("No response from server. Please check your connection and try again.");
+      } else {
+        console.error("Error setting up request:", error.message);
+        setError(error.message || "Error setting up request. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -171,6 +246,75 @@ const Checkout = () => {
                   onChange={(e) => setFormData({...formData, phone: e.target.value})} 
                   placeholder="Enter your phone number" 
                   required 
+                />
+              </div>
+            </div>
+            
+            <div className="form-section">
+              <h3>Shipping Address</h3>
+              <div className="form-group">
+                <label htmlFor="addressLine1">Address Line</label>
+                <input 
+                  type="text" 
+                  id="addressLine1" 
+                  name="addressLine1" 
+                  value={formData.addressLine1} 
+                  onChange={(e) => setFormData({...formData, addressLine1: e.target.value})} 
+                  placeholder="Enter your street address" 
+                  required 
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="city">City</label>
+                <input 
+                  type="text" 
+                  id="city" 
+                  name="city" 
+                  value={formData.city} 
+                  onChange={(e) => setFormData({...formData, city: e.target.value})} 
+                  placeholder="Enter your city" 
+                  required 
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="state">State</label>
+                <input 
+                  type="text" 
+                  id="state" 
+                  name="state" 
+                  value={formData.state} 
+                  onChange={(e) => setFormData({...formData, state: e.target.value})} 
+                  placeholder="Enter your state" 
+                  required 
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="postalCode">Postal Code</label>
+                <input 
+                  type="text" 
+                  id="postalCode" 
+                  name="postalCode" 
+                  value={formData.postalCode} 
+                  onChange={(e) => setFormData({...formData, postalCode: e.target.value})} 
+                  placeholder="Enter your postal code" 
+                  required 
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="country">Country</label>
+                <input 
+                  type="text" 
+                  id="country" 
+                  name="country" 
+                  value={formData.country} 
+                  onChange={(e) => setFormData({...formData, country: e.target.value})} 
+                  placeholder="Enter your country" 
+                  required 
+                  disabled
                 />
               </div>
             </div>
@@ -244,7 +388,7 @@ const Checkout = () => {
             <>
               <div className="cart-items">
                 {cart.map((item) => (
-                  <div className="cart-item" key={item.id}>
+                  <div className="cart-item" key={`${item.productId}-${item.variantSize || 'no-size'}-${item.variantColor || 'no-color'}`}>
                     <div className="item-details">
                       <h4>{item.name}</h4>
                       {item.variantSize && <p>Size: {item.variantSize}</p>}

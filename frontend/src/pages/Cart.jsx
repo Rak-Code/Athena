@@ -52,7 +52,7 @@ const Cart = () => {
           <Card className="mb-4 border-0 shadow-sm">
             <Card.Body>
               {cart.map((item) => (
-                <Row key={item.id} className="mb-4 align-items-center border-bottom pb-3">
+                <Row key={item.productId} className="mb-4 align-items-center border-bottom pb-3">
                   <Col xs={3} md={2}>
                     <img 
                       src={item.imageUrl || "https://via.placeholder.com/150"} 
@@ -73,7 +73,7 @@ const Cart = () => {
                       <Button 
                         variant="outline-secondary" 
                         size="sm"
-                        onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                        onClick={() => handleQuantityChange(item.productId, item.quantity - 1)}
                       >
                         -
                       </Button>
@@ -81,14 +81,14 @@ const Cart = () => {
                         type="number"
                         min="1"
                         value={item.quantity}
-                        onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value))}
+                        onChange={(e) => handleQuantityChange(item.productId, parseInt(e.target.value))}
                         className="mx-2 text-center"
                         style={{ width: "60px" }}
                       />
                       <Button 
                         variant="outline-secondary" 
                         size="sm"
-                        onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                        onClick={() => handleQuantityChange(item.productId, item.quantity + 1)}
                       >
                         +
                       </Button>
@@ -103,7 +103,7 @@ const Cart = () => {
                     <Button 
                       variant="link" 
                       className="text-danger p-0"
-                      onClick={() => removeFromCart(item.id)}
+                      onClick={() => removeFromCart(item.productId)}
                     >
                       <FaTrash />
                     </Button>

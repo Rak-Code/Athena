@@ -18,55 +18,86 @@ const Login = ({ handleCloseModal, setShowRegister, showRegister, onLoginSuccess
     e.preventDefault();
     try {
       setError("");
+      console.log("Sending login request with:", { email: formData.email });
+      
       const response = await axios.post("http://localhost:8080/api/users/login", formData, {
         withCredentials: true
       });
       
       // Process the response data
-      const userData = response.data;
-      console.log("Login response data:", userData);
-      
-      // Normalize user data structure
-      const processedUserData = {
-        ...userData,
-        id: userData.id || userData.userId || (userData.user ? userData.user.id : null),
-        userId: userData.userId || userData.id || (userData.user ? userData.user.userId : null),
-        role: userData.role || userData.userRole || (userData.user ? userData.user.role : null) || "USER"
-      };
-      
-      // Double check that we have valid ID properties
-      if (!processedUserData.id && !processedUserData.userId) {
-        console.error("Warning: User data is missing both id and userId properties!");
-        // Try to extract ID from other properties if available
-        if (userData.user && (userData.user.id || userData.user.userId)) {
-          processedUserData.id = userData.user.id || userData.user.userId;
-          processedUserData.userId = userData.user.userId || userData.user.id;
-          console.log("Extracted ID from nested user object:", processedUserData.id);
-        }
+      let userData;
+      try {
+        // If the response is a string, try to parse it as JSON
+        userData = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
+        console.log("Parsed user data:", userData);
+      } catch (parseError) {
+        console.error("Error parsing response data:", parseError);
+        throw new Error("Invalid response format from server");
       }
       
-      console.log("Final processed user data:", processedUserData);
-      onLoginSuccess(processedUserData); // Pass processed user data to the parent component
+      // Check if the response is an error message
+      if (typeof userData === 'string') {
+        throw new Error(userData);
+      }
+      
+      // Ensure we have a properly structured user object
+      const processedUserData = {
+        id: userData.userId,
+        userId: userData.userId,
+        username: userData.username,
+        email: userData.email,
+        role: userData.role || "USER"
+      };
+      
+      console.log("Processed user data:", processedUserData);
+      
+      // Validate the processed data
+      if (!processedUserData.userId) {
+        console.error("Missing userId in processed data");
+        throw new Error("Invalid user data: missing ID");
+      }
+      if (!processedUserData.email) {
+        console.error("Missing email in processed data");
+        throw new Error("Invalid user data: missing email");
+      }
+      
+      console.log("Final user data to be stored:", processedUserData);
+      
+      // Store the processed user data
+      localStorage.setItem("user", JSON.stringify(processedUserData));
+      
+      onLoginSuccess(processedUserData);
 
       // Get the return URL from location state
       const returnUrl = location.state?.from || '/';
-      console.log("Return URL from location state:", returnUrl);
       
-      // Redirect based on role or return URL
+      // Redirect based on role
       if (processedUserData.role === "ADMIN" || processedUserData.role === "SUPER_ADMIN") {
-        console.log("Redirecting to admin dashboard");
-        navigate("/admin"); // Redirect to admin panel
+        navigate("/admin");
       } else {
-        console.log("Redirecting to:", returnUrl);
-        navigate(returnUrl); // Redirect to return URL or home page
+        navigate(returnUrl);
       }
 
       if (handleCloseModal) {
         handleCloseModal();
       }
     } catch (error) {
-      console.error("Login failed:", error.response?.data || error.message);
-      setError("Invalid email or password. Please try again."); // Set error message
+      console.error("Login error details:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        originalError: error
+      });
+      
+      if (error.response?.status === 401) {
+        setError("Invalid email or password");
+      } else if (error.message.includes("Invalid user data")) {
+        setError(error.message);
+      } else if (error.message.includes("Invalid response format")) {
+        setError("Server response format error. Please try again.");
+      } else {
+        setError("An error occurred during login. Please try again.");
+      }
     }
   };
 

@@ -27,7 +27,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 const App = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [user, setUser] = useState(null); // Initialize user as null
+  const [user, setUser] = useState(null);
 
   // Load user from localStorage when the app loads
   useEffect(() => {
@@ -35,12 +35,44 @@ const App = () => {
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
-        console.log("Loaded user from localStorage:", parsedUser);
-        setUser(parsedUser);
+        console.log("Loading user from localStorage:", parsedUser);
+        
+        // Validate user data structure
+        if (!parsedUser || typeof parsedUser !== 'object') {
+          throw new Error("Invalid user data structure");
+        }
+        
+        // Ensure we have required fields
+        if (!parsedUser.email) {
+          throw new Error("Missing email in user data");
+        }
+        if (!parsedUser.userId) {
+          throw new Error("Missing user ID");
+        }
+        
+        // Normalize the user object structure
+        const normalizedUser = {
+          id: parsedUser.userId,
+          userId: parsedUser.userId,
+          username: parsedUser.username,
+          email: parsedUser.email,
+          role: parsedUser.role || "USER"
+        };
+        
+        // Validate ID format
+        if (isNaN(normalizedUser.userId)) {
+          throw new Error("Invalid user ID format");
+        }
+        
+        console.log("Normalized user data:", normalizedUser);
+        setUser(normalizedUser);
+        
+        // Update localStorage with normalized data
+        localStorage.setItem("user", JSON.stringify(normalizedUser));
       } catch (error) {
-        console.error("Error parsing user from localStorage:", error);
-        localStorage.removeItem("user"); // Remove corrupted data
-        setUser(null); // Reset user state
+        console.error("Error processing stored user data:", error);
+        localStorage.removeItem("user");
+        setUser(null);
       }
     }
   }, []);
@@ -57,23 +89,41 @@ const App = () => {
     console.log("Login successful, received user data:", userData);
 
     if (userData) {
-      // Ensure the user object has the correct structure
-      const processedUserData = {
-        ...userData,
-        id: userData.id || userData.userId, // Ensure `id` is set
-        userId: userData.userId || userData.id, // Ensure `userId` is set
-        role: userData.role || userData.userRole || "USER" // Ensure role is set
-      };
+      try {
+        // Validate incoming user data
+        if (!userData.email) {
+          throw new Error("Missing email in user data");
+        }
+        if (!userData.userId) {
+          throw new Error("Missing user ID");
+        }
 
-      console.log("Processed user data:", processedUserData);
-      setUser(processedUserData); // Set the logged-in user
+        // Normalize the user object structure
+        const normalizedUser = {
+          id: userData.userId,
+          userId: userData.userId,
+          username: userData.username,
+          email: userData.email,
+          role: userData.role || "USER"
+        };
 
-      // Save user to localStorage for session persistence
-      localStorage.setItem("user", JSON.stringify(processedUserData));
+        // Validate ID format
+        if (isNaN(normalizedUser.userId)) {
+          throw new Error("Invalid user ID format");
+        }
+
+        console.log("Normalized user data:", normalizedUser);
+        setUser(normalizedUser);
+        localStorage.setItem("user", JSON.stringify(normalizedUser));
+      } catch (error) {
+        console.error("Error processing user data:", error);
+        setUser(null);
+        localStorage.removeItem("user");
+        throw error; // Re-throw to be handled by the login component
+      }
     } else {
-      // User is logging out
       setUser(null);
-      localStorage.removeItem("user"); // Remove user from localStorage
+      localStorage.removeItem("user");
     }
   };
 
@@ -90,7 +140,11 @@ const App = () => {
             {/* Customer Routes */}
             <Route path="/" element={<Home searchTerm={searchTerm} />} />
             <Route path="/cart" element={<Cart />} />
-            <Route path="/my-profile" element={<MyProfile />} />
+            <Route path="/my-profile" element={
+              <ProtectedRoute user={user} requiredRole="USER">
+                <MyProfile />
+              </ProtectedRoute>
+            } />
             <Route path="/wishlist" element={<Wishlist />} />
             <Route
               path="/login"
@@ -98,15 +152,8 @@ const App = () => {
             />
             <Route path="/register" element={<Register />} />
             <Route path="/product/:id" element={<ProductDetail />} />
-            <Route path="/checkout" element={
-              <ProtectedRoute user={user} requiredRole="USER">
-                <Checkout />
-              </ProtectedRoute>
-            } />
-            <Route
-              path="/order-confirmation/:orderId"
-              element={<OrderConfirmation />}
-            />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
             <Route
               path="/orders/:orderId"
               element={
