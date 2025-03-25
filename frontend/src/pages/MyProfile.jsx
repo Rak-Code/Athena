@@ -55,57 +55,104 @@ const MyProfile = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
+        console.log("MyProfile - Fetching user data");
         const storedUser = localStorage.getItem("user");
+        
         if (!storedUser) {
-          navigate("/login");
+          console.log("MyProfile - No stored user data, redirecting to login");
+          navigate("/login", { state: { from: "/my-profile" } });
           return;
         }
 
-        const userData = JSON.parse(storedUser);
-        setUser(userData);
-        setEditForm({
-          username: userData.username || "",
-          email: userData.email || "",
-          phone: userData.phone || "",
-          address: userData.address || ""
-        });
-
-        // Fetch user's orders
-        if (userData.id) {
-          const ordersResponse = await axios.get(
-            `http://localhost:8080/api/orders/user/${userData.id}`,
-            { withCredentials: true }
-          );
-          setOrders(ordersResponse.data);
-        }
-
-        // Fetch user's wishlist
-        if (userData.id) {
-          const wishlistResponse = await axios.get(
-            `http://localhost:8080/api/wishlist/user/${userData.id}`,
-            { withCredentials: true }
-          );
-          setWishlist(wishlistResponse.data);
-        }
-
-        // Fetch user's reviews (if available)
+        let userData;
         try {
-          if (userData.id) {
-            const reviewsResponse = await axios.get(
-              `http://localhost:8080/api/reviews/user/${userData.id}`,
+          userData = JSON.parse(storedUser);
+          console.log("MyProfile - Parsed user data:", userData);
+          
+          // Validate user data structure
+          if (!userData || typeof userData !== 'object') {
+            throw new Error("Invalid user data structure");
+          }
+          
+          // Ensure we have required fields
+          if (!userData.email) {
+            throw new Error("Missing email in user data");
+          }
+          if (!userData.id && !userData.userId) {
+            throw new Error("Missing user ID");
+          }
+          
+          // Normalize the user object structure
+          const normalizedUser = {
+            id: userData.id || userData.userId,
+            userId: userData.id || userData.userId,
+            username: userData.username,
+            email: userData.email,
+            role: userData.role || "USER",
+            phone: userData.phone || "",
+            address: userData.address || ""
+          };
+          
+          console.log("MyProfile - Normalized user data:", normalizedUser);
+          setUser(normalizedUser);
+          setEditForm({
+            username: normalizedUser.username || "",
+            email: normalizedUser.email || "",
+            phone: normalizedUser.phone || "",
+            address: normalizedUser.address || ""
+          });
+
+          // Fetch user's orders
+          if (normalizedUser.id) {
+            console.log("MyProfile - Fetching orders for user:", normalizedUser.id);
+            const ordersResponse = await axios.get(
+              `http://localhost:8080/api/orders/user/${normalizedUser.id}`,
               { withCredentials: true }
             );
-            setReviews(reviewsResponse.data);
+            console.log("MyProfile - Orders response:", ordersResponse.data);
+            setOrders(ordersResponse.data);
           }
-        } catch (error) {
-          console.log("No reviews endpoint available or no reviews found");
-          setReviews([]);
+
+          // Fetch user's wishlist
+          if (normalizedUser.id) {
+            console.log("MyProfile - Fetching wishlist for user:", normalizedUser.id);
+            const wishlistResponse = await axios.get(
+              `http://localhost:8080/api/wishlist/user/${normalizedUser.id}`,
+              { withCredentials: true }
+            );
+            console.log("MyProfile - Wishlist response:", wishlistResponse.data);
+            setWishlist(wishlistResponse.data);
+          }
+
+          // Fetch user's reviews (if available)
+          try {
+            if (normalizedUser.id) {
+              console.log("MyProfile - Fetching reviews for user:", normalizedUser.id);
+              const reviewsResponse = await axios.get(
+                `http://localhost:8080/api/reviews/user/${normalizedUser.id}`,
+                { withCredentials: true }
+              );
+              console.log("MyProfile - Reviews response:", reviewsResponse.data);
+              setReviews(reviewsResponse.data);
+            }
+          } catch (error) {
+            console.log("MyProfile - No reviews endpoint available or no reviews found");
+            setReviews([]);
+          }
+        } catch (parseError) {
+          console.error("MyProfile - Error processing user data:", parseError);
+          localStorage.removeItem("user");
+          navigate("/login", { state: { from: "/my-profile" } });
+          return;
         }
 
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error("MyProfile - Error fetching user data:", error);
         setLoading(false);
+        if (error.response?.status === 401) {
+          navigate("/login", { state: { from: "/my-profile" } });
+        }
       }
     };
 

@@ -117,7 +117,34 @@ const NavigationBar = ({ setSearchTerm, user, onLoginSuccess }) => {
                       <div className="text-muted small">{user.email}</div>
                     </div>
 
-                    <Dropdown.Item as={NavLink} to="/my-profile" className="py-2">
+                    <Dropdown.Item 
+                      as={NavLink} 
+                      to="/my-profile" 
+                      className="py-2"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        console.log("NavigationBar - Profile link clicked");
+                        // Check if user data is valid
+                        const storedUser = localStorage.getItem('user');
+                        if (!storedUser) {
+                          console.log("NavigationBar - No stored user data, redirecting to login");
+                          navigate("/login", { state: { from: "/my-profile" } });
+                          return;
+                        }
+                        try {
+                          const userData = JSON.parse(storedUser);
+                          if (!userData || !userData.email || (!userData.id && !userData.userId)) {
+                            throw new Error("Invalid user data");
+                          }
+                          console.log("NavigationBar - Navigating to profile");
+                          navigate("/my-profile");
+                        } catch (error) {
+                          console.error("NavigationBar - Error processing user data:", error);
+                          localStorage.removeItem('user');
+                          navigate("/login", { state: { from: "/my-profile" } });
+                        }
+                      }}
+                    >
                       <div className="d-flex align-items-center">
                         <FaUser className="me-2 text-secondary" />
                         <span>My Profile</span>

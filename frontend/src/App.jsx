@@ -141,7 +141,7 @@ const App = () => {
             <Route path="/" element={<Home searchTerm={searchTerm} />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/my-profile" element={
-              <ProtectedRoute user={user} requiredRole="USER">
+              <ProtectedRoute user={user} requiredRole={null}>
                 <MyProfile />
               </ProtectedRoute>
             } />
