@@ -1,9 +1,14 @@
 import React, { useState } from "react";
 import { Container, Nav } from "react-bootstrap";
+
+// Import all necessary components
 import CarouselComponent from "../components/CarouselComponent";
 import ProductList from "../components/ProductList";
 import Footer from "../components/Footer";
-import NewsletterSubscription from "../components/NewsletterSubscription"; // Import the new component
+import NewsletterSubscription from "../components/NewsletterSubscription";
+
+// New Chatbot Button Import
+import ChatbotButton from "../components/ChatBotButton";
 
 const Home = ({ searchTerm }) => {
   const [activeTab, setActiveTab] = useState("home");
@@ -30,7 +35,7 @@ const Home = ({ searchTerm }) => {
   };
 
   return (
-    <Container className="mt-4">
+    <Container className="mt-4 position-relative">
       {/* Show Carousel only when there is no search */}
       {!searchTerm && <CarouselComponent />}
 
@@ -84,10 +89,13 @@ const Home = ({ searchTerm }) => {
         </>
       )}
 
-      {/* Add Newsletter Subscription Component */}
+      {/* Newsletter Subscription Component */}
       <NewsletterSubscription />
 
       <Footer />
+
+      {/* Floating Chatbot Button */}
+      <ChatbotButton />
     </Container>
   );
 };
