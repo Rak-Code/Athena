@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaTrash } from "react-icons/fa";
 import { useCart } from "../context/CartContext";
 import Footer from "../components/Footer";
+
 const Cart = () => {
   const { cart, updateCartItem, removeFromCart } = useCart();
   const navigate = useNavigate();
@@ -19,6 +20,14 @@ const Cart = () => {
   };
 
   const handleCheckout = () => {
+    // Check if user is logged in by looking for user data in localStorage
+    const userData = localStorage.getItem('user');
+    if (!userData) {
+      // If not logged in, redirect to login page with return URL
+      navigate('/login', { state: { from: '/checkout' } });
+      return;
+    }
+    // If logged in, proceed to checkout
     navigate('/checkout');
   };
 

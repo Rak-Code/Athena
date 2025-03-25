@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { Form, Button } from "react-bootstrap";
 import axios from "axios";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate, useLocation } from "react-router-dom"; // Add useLocation
 import Register from "./Register";
 
 const Login = ({ handleCloseModal, setShowRegister, showRegister, onLoginSuccess }) => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState(""); // State for error messages
   const navigate = useNavigate(); // Hook for navigation
+  const location = useLocation(); // Add location hook
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -47,16 +48,22 @@ const Login = ({ handleCloseModal, setShowRegister, showRegister, onLoginSuccess
       console.log("Final processed user data:", processedUserData);
       onLoginSuccess(processedUserData); // Pass processed user data to the parent component
 
-      // Redirect based on role
+      // Get the return URL from location state
+      const returnUrl = location.state?.from || '/';
+      console.log("Return URL from location state:", returnUrl);
+      
+      // Redirect based on role or return URL
       if (processedUserData.role === "ADMIN" || processedUserData.role === "SUPER_ADMIN") {
         console.log("Redirecting to admin dashboard");
         navigate("/admin"); // Redirect to admin panel
       } else {
-        console.log("Redirecting to home page");
-        navigate("/"); // Redirect to home page for regular users
+        console.log("Redirecting to:", returnUrl);
+        navigate(returnUrl); // Redirect to return URL or home page
       }
 
-      handleCloseModal(); // Close the modal after successful login
+      if (handleCloseModal) {
+        handleCloseModal();
+      }
     } catch (error) {
       console.error("Login failed:", error.response?.data || error.message);
       setError("Invalid email or password. Please try again."); // Set error message

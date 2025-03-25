@@ -98,7 +98,11 @@ const App = () => {
             />
             <Route path="/register" element={<Register />} />
             <Route path="/product/:id" element={<ProductDetail />} />
-            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/checkout" element={
+              <ProtectedRoute user={user} requiredRole="USER">
+                <Checkout />
+              </ProtectedRoute>
+            } />
             <Route
               path="/order-confirmation/:orderId"
               element={<OrderConfirmation />}

@@ -22,7 +22,12 @@ import {
   FaEdit,
   FaTrash,
   FaGift,
-  FaUserFriends
+  FaUserFriends,
+  FaHome,
+  FaTruck,
+  FaExchangeAlt,
+  FaComment,
+  FaPhone
 } from "react-icons/fa";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
@@ -211,18 +216,20 @@ const MyProfile = () => {
       <Container className="pb-5" style={{ maxWidth: "1400px" }}>
         <Tab.Container defaultActiveKey="accountDetails">
           <Row>
-            {/* LEFT NAVIGATION COLUMN */}
+            {/* LEFT NAVIGATION COLUMN - UPDATED WITH ICONS */}
             <Col md={3} className="mb-4">
               <Nav className="flex-column">
                 {/* PROFILE SECTION */}
                 <h6 className="text-uppercase text-muted mb-2 px-3">Profile</h6>
                 <Nav.Item>
-                  <Nav.Link eventKey="accountDetails" className="py-2 px-3">
+                  <Nav.Link eventKey="accountDetails" className="py-2 px-3 d-flex align-items-center">
+                    <FaUser className="me-2" />
                     Account Details
                   </Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
-                  <Nav.Link eventKey="shippingAddresses" className="py-2 px-3">
+                  <Nav.Link eventKey="shippingAddresses" className="py-2 px-3 d-flex align-items-center">
+                    <FaTruck className="me-2" />
                     Shipping Addresses
                   </Nav.Link>
                 </Nav.Item>
@@ -234,6 +241,7 @@ const MyProfile = () => {
                     eventKey="orderHistory"
                     className="py-2 px-3 d-flex align-items-center"
                   >
+                    <FaShoppingBag className="me-2" />
                     Order History
                     {orders.length > 0 && (
                       <Badge bg="dark" className="ms-auto">
@@ -243,7 +251,8 @@ const MyProfile = () => {
                   </Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
-                  <Nav.Link eventKey="returnsRefunds" className="py-2 px-3">
+                  <Nav.Link eventKey="returnsRefunds" className="py-2 px-3 d-flex align-items-center">
+                    <FaExchangeAlt className="me-2" />
                     Returns &amp; Refunds
                   </Nav.Link>
                 </Nav.Item>
@@ -255,6 +264,7 @@ const MyProfile = () => {
                     eventKey="wishlist"
                     className="py-2 px-3 d-flex align-items-center"
                   >
+                    <FaHeart className="me-2" />
                     My Wishlist
                     {wishlist.length > 0 && (
                       <Badge bg="dark" className="ms-auto">
@@ -268,6 +278,7 @@ const MyProfile = () => {
                     eventKey="reviews"
                     className="py-2 px-3 d-flex align-items-center"
                   >
+                    <FaStar className="me-2" />
                     My Reviews
                     {reviews.length > 0 && (
                       <Badge bg="dark" className="ms-auto">
@@ -277,12 +288,13 @@ const MyProfile = () => {
                   </Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
-                  <Nav.Link eventKey="contactUs" className="py-2 px-3">
+                  <Nav.Link eventKey="contactUs" className="py-2 px-3 d-flex align-items-center">
+                    <FaPhone className="me-2" />
                     Contact Us
                   </Nav.Link>
                 </Nav.Item>
 
-                {/* REWARDS SECTION - MOVED TO BOTTOM */}
+                {/* REWARDS SECTION */}
                 <h6 className="text-uppercase text-muted mt-4 mb-2 px-3">Rewards</h6>
                 <Nav.Item>
                   <Nav.Link eventKey="giftCards" className="py-2 px-3 d-flex align-items-center">
