@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Modal, Form, Button } from 'react-bootstrap';
 import axios from 'axios';
 
@@ -6,6 +6,14 @@ const ChatbotModal = ({ show, onHide }) => {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const chatContainerRef = useRef(null);
+
+  // Automatically scroll to bottom when messages change
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   // Function to send message to backend
   const sendMessage = async () => {
@@ -14,7 +22,8 @@ const ChatbotModal = ({ show, onHide }) => {
     // Create a new message object for user message
     const userMessage = {
       sender: 'user',
-      content: inputMessage
+      content: inputMessage,
+      timestamp: new Date().toISOString()
     };
 
     // Update messages with user message
@@ -26,12 +35,19 @@ const ChatbotModal = ({ show, onHide }) => {
       // Make API call to Spring Boot backend
       const response = await axios.post('http://localhost:8080/api/chat', {
         message: inputMessage
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          // Optional: Add any additional headers like authorization if needed
+        },
+        timeout: 10000 // 10 seconds timeout
       });
 
       // Create a new message object for bot response
       const botMessage = {
         sender: 'bot',
-        content: response.data.message
+        content: response.data.message,
+        timestamp: new Date().toISOString()
       };
 
       // Update messages with bot response
@@ -40,7 +56,10 @@ const ChatbotModal = ({ show, onHide }) => {
       console.error('Error sending message:', error);
       const errorMessage = {
         sender: 'bot',
-        content: 'Sorry, there was an error processing your message.'
+        content: error.response 
+          ? error.response.data.message 
+          : 'Sorry, there was an error processing your message.',
+        timestamp: new Date().toISOString()
       };
       setMessages(prevMessages => [...prevMessages, errorMessage]);
     } finally {
@@ -59,6 +78,14 @@ const ChatbotModal = ({ show, onHide }) => {
     sendMessage();
   };
 
+  // Handle keypress for sending message on Enter
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
   return (
     <Modal 
       show={show} 
@@ -71,13 +98,16 @@ const ChatbotModal = ({ show, onHide }) => {
       </Modal.Header>
       <Modal.Body>
         <div 
+          ref={chatContainerRef}
           className="chat-messages" 
           style={{
             height: '400px',
             overflowY: 'auto',
             marginBottom: '15px',
             padding: '10px',
-            backgroundColor: '#f8f9fa'
+            backgroundColor: '#f8f9fa',
+            display: 'flex',
+            flexDirection: 'column'
           }}
         >
           {messages.map((msg, index) => (
@@ -89,10 +119,11 @@ const ChatbotModal = ({ show, onHide }) => {
                 margin: '10px 0',
                 padding: '10px',
                 borderRadius: '8px',
-                backgroundColor: msg.sender === 'user' ? '#333333' : '#e9ecef', // Changed to a softer black
+                backgroundColor: msg.sender === 'user' ? '#333333' : '#e9ecef',
                 color: msg.sender === 'user' ? 'white' : 'black',
                 maxWidth: '70%',
-                alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start'
+                alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
+                wordWrap: 'break-word'
               }}
             >
               {msg.content}
@@ -104,7 +135,8 @@ const ChatbotModal = ({ show, onHide }) => {
               style={{
                 textAlign: 'left',
                 fontStyle: 'italic',
-                color: '#6c757d'
+                color: '#6c757d',
+                alignSelf: 'flex-start'
               }}
             >
               Typing...
@@ -118,12 +150,13 @@ const ChatbotModal = ({ show, onHide }) => {
               placeholder="Type your message..."
               value={inputMessage}
               onChange={handleInputChange}
+              onKeyPress={handleKeyPress}
               className="mr-2"
             />
             <Button 
               variant="dark" 
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !inputMessage.trim()}
             >
               Send
             </Button>
