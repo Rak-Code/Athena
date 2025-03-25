@@ -36,17 +36,22 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<Map<String, Object>> createOrder(@RequestBody Map<String, Object> orderRequest) {
         try {
+            System.out.println("Received order request: " + orderRequest);
+            
             // Extract customer information
             String customerName = (String) orderRequest.get("customerName");
             String email = (String) orderRequest.get("email");
             String phone = (String) orderRequest.get("phone");
             Long userId = orderRequest.get("userId") != null ? Long.parseLong(orderRequest.get("userId").toString()) : null;
 
+            System.out.println("Processing order for user ID: " + userId);
+
             // Find user by ID first, then by email if ID not found
             User user;
             if (userId != null) {
                 user = userRepository.findById(userId)
                     .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+                System.out.println("Found user: " + user.getUsername());
             } else {
                 user = userRepository.findByEmail(email).orElseGet(() -> {
                     User newUser = new User();
@@ -59,13 +64,33 @@ public class OrderController {
 
             // Extract cart items
             List<Map<String, Object>> cartItems = (List<Map<String, Object>>) orderRequest.get("cartItems");
+            System.out.println("Received cart items: " + cartItems);
+
+            if (cartItems == null || cartItems.isEmpty()) {
+                throw new RuntimeException("No cart items provided");
+            }
 
             // Calculate total amount
             BigDecimal totalAmount = BigDecimal.ZERO;
             for (Map<String, Object> item : cartItems) {
-                BigDecimal price = new BigDecimal(item.get("price").toString());
-                int quantity = Integer.parseInt(item.get("quantity").toString());
+                System.out.println("Processing cart item: " + item);
+                
+                Object priceObj = item.get("price");
+                Object quantityObj = item.get("quantity");
+                Object idObj = item.get("id");
+                
+                if (priceObj == null || quantityObj == null || idObj == null) {
+                    System.out.println("Missing required fields in cart item:");
+                    System.out.println("price: " + priceObj);
+                    System.out.println("quantity: " + quantityObj);
+                    System.out.println("id: " + idObj);
+                    throw new RuntimeException("Cart item is missing required fields");
+                }
+
+                BigDecimal price = new BigDecimal(priceObj.toString());
+                int quantity = Integer.parseInt(quantityObj.toString());
                 totalAmount = totalAmount.add(price.multiply(new BigDecimal(quantity)));
+                System.out.println("Processing item: ID=" + idObj + ", quantity=" + quantity + ", price=" + price);
             }
 
             // Create the order
@@ -97,14 +122,18 @@ public class OrderController {
             }
 
             Order savedOrder = orderService.createOrder(order);
+            System.out.println("Created order with ID: " + savedOrder.getOrderId());
 
             // Create order details for each cart item
             List<Map<String, Object>> orderDetailsList = new ArrayList<>();
+            System.out.println("Processing " + cartItems.size() + " cart items");
+            
             for (Map<String, Object> item : cartItems) {
                 Long productId = Long.parseLong(item.get("id").toString());
                 int quantity = Integer.parseInt(item.get("quantity").toString());
                 BigDecimal price = new BigDecimal(item.get("price").toString());
 
+                System.out.println("Creating order detail for product ID: " + productId);
                 Optional<Product> productOpt = productRepository.findById(productId);
                 if (productOpt.isPresent()) {
                     OrderDetail detail = new OrderDetail();
@@ -112,21 +141,26 @@ public class OrderController {
                     detail.setProduct(productOpt.get());
                     detail.setQuantity(quantity);
                     detail.setPrice(price);
-                    orderDetailService.createOrderDetail(detail);
+                    OrderDetail savedDetail = orderDetailService.createOrderDetail(detail);
+                    System.out.println("Created order detail with ID: " + savedDetail.getOrderDetailId());
 
                     // Adding order details to response
                     Map<String, Object> orderDetailResponse = new HashMap<>();
-                    orderDetailResponse.put("productId", productOpt.get().getProductId()); // Changed getProductId() to getId()
+                    orderDetailResponse.put("orderDetailId", savedDetail.getOrderDetailId());
+                    orderDetailResponse.put("productId", productOpt.get().getProductId());
                     orderDetailResponse.put("name", productOpt.get().getName());
                     orderDetailResponse.put("quantity", quantity);
                     orderDetailResponse.put("price", price);
                     orderDetailsList.add(orderDetailResponse);
+                } else {
+                    System.out.println("Product not found with ID: " + productId);
+                    throw new RuntimeException("Product not found with ID: " + productId);
                 }
             }
 
             // Create a response map with only necessary details
             Map<String, Object> response = new HashMap<>();
-            response.put("orderId", savedOrder.getOrderId()); // Changed getOrderId() to getId()
+            response.put("orderId", savedOrder.getOrderId());
             response.put("status", savedOrder.getStatus());
             response.put("totalAmount", savedOrder.getTotalAmount());
             response.put("orderDate", savedOrder.getOrderDate());
@@ -172,6 +206,21 @@ public class OrderController {
     // Get order by ID
     @GetMapping("/{orderId}")
     public ResponseEntity<Order> getOrderById(@PathVariable Long orderId) {
+        System.out.println("Fetching order with ID: " + orderId);
+        Optional<Order> orderOpt = orderService.getOrderById(orderId);
+        if (orderOpt.isPresent()) {
+            Order order = orderOpt.get();
+            System.out.println("Found order - Status: " + order.getStatus() + 
+                             ", Total Amount: " + order.getTotalAmount() +
+                             ", Customer: " + order.getCustomerName());
+            if (order.getOrderDetails() != null) {
+                System.out.println("Order has " + order.getOrderDetails().size() + " items");
+            } else {
+                System.out.println("Order details list is null");
+            }
+        } else {
+            System.out.println("Order not found with ID: " + orderId);
+        }
         return orderService.getOrderById(orderId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

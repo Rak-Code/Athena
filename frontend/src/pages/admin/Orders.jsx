@@ -8,226 +8,173 @@ const Orders = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState("ALL");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [ordersPerPage] = useState(10);
   const location = useLocation();
   const navigate = useNavigate();
-  
-  // Parse query parameters on component mount and location change
+
+  const STATUS_OPTIONS = {
+    PENDING: "PENDING",
+    PROCESSING: "PROCESSING",
+    SHIPPED: "SHIPPED",
+    DELIVERED: "DELIVERED",
+    CANCELLED: "CANCELLED"
+  };
+
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const statusParam = queryParams.get('status');
-    
-    if (statusParam) {
-      console.log("Setting filter from URL parameter:", statusParam);
+    if (statusParam && STATUS_OPTIONS[statusParam.toUpperCase()]) {
       setFilter(statusParam.toUpperCase());
     }
-    
-    // Force a refresh of orders when component mounts or location changes
-    setLoading(true);
+
     fetchOrders();
-    
-    // Set up polling to fetch orders every 30 seconds
-    const pollingInterval = setInterval(() => {
-      console.log("Polling for new orders...");
-      fetchOrders(false); // Don't set loading state for polling refreshes
-    }, 30000);
-    
-    // Clean up interval on component unmount
+
+    const pollingInterval = setInterval(fetchOrders, 30000);
     return () => clearInterval(pollingInterval);
   }, [location]);
 
-  const fetchOrders = async (showLoading = true) => {
+  const fetchOrders = async () => {
     try {
-      if (showLoading) {
-        setLoading(true);
-      }
+      setLoading(true);
+      setError(null);
       
-      // Add a timestamp to prevent caching
-      const timestamp = new Date().getTime();
-      const response = await axios.get(`http://localhost:8080/api/orders?_t=${timestamp}`, {
+      // First try to get all orders at once
+      let response = await axios.get(`http://localhost:8080/api/orders`, {
         withCredentials: true
       });
-      
-      // Add more detailed logging to debug the issue
-      console.log("Raw orders response:", response);
-      console.log("Fetched orders:", response.data);
-      console.log("Total orders count:", response.data.length);
-      
-      // Log the order IDs to see what orders we're actually getting
-      const orderIds = response.data.map(order => order.orderId).sort((a, b) => a - b);
-      console.log("Order IDs received:", orderIds);
-      
-      // Check for missing order IDs - helpful for debugging
-      const maxOrderId = Math.max(...orderIds, 0); // Use 0 as fallback if array is empty
-      const missingOrderIds = [];
-      for (let i = 1; i <= maxOrderId; i++) {
-        if (!orderIds.includes(i)) {
-          missingOrderIds.push(i);
+
+      // If we get fewer orders than expected, try paginated approach
+      if (response.data.length < 32) {
+        console.log("Initial fetch got fewer orders than expected, trying paginated approach");
+        const allOrders = [];
+        let page = 0;
+        const pageSize = 10;
+        let hasMore = true;
+
+        while (hasMore) {
+          const pageResponse = await axios.get(`http://localhost:8080/api/orders`, {
+            params: { 
+              page: page,
+              size: pageSize,
+              sort: 'orderDate,desc'
+            },
+            withCredentials: true
+          });
+
+          if (!pageResponse.data || !Array.isArray(pageResponse.data)) {
+            throw new Error("Invalid data format received from server");
+          }
+
+          allOrders.push(...pageResponse.data);
+          
+          if (pageResponse.data.length < pageSize) {
+            hasMore = false;
+          } else {
+            page++;
+          }
         }
+        response.data = allOrders;
       }
-      if (missingOrderIds.length > 0) {
-        console.warn("Missing order IDs:", missingOrderIds);
-      }
-      
-      // Process and validate each order's status
+
+      console.log("Total orders received:", response.data.length);
+
       const processedOrders = response.data.map(order => {
-        // Ensure status is a valid enum value
-        const validStatuses = ["PENDING", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"];
-        const currentStatus = order.status?.toUpperCase();
+        // Normalize status
+        const status = STATUS_OPTIONS[order.status?.toUpperCase()] || STATUS_OPTIONS.PENDING;
         
-        if (!currentStatus || !validStatuses.includes(currentStatus)) {
-          console.warn(`Order ${order.orderId} has invalid status: ${order.status}. Setting to PENDING.`);
-          
-          // Fix any order with invalid status, not just #10
-          (async () => {
-            try {
-              console.log(`Attempting to fix status for order #${order.orderId}`);
-              await axios.put(`http://localhost:8080/api/orders/${order.orderId}/status?status=PENDING`, {}, {
-                withCredentials: true
-              });
-              console.log(`Successfully fixed status for order #${order.orderId}`);
-            } catch (fixErr) {
-              console.error(`Failed to fix status for order #${order.orderId}:`, fixErr);
-            }
-          })();
-          
-          return {
-            ...order,
-            status: "PENDING"
-          };
-        }
-        
+        // Determine display name with proper fallbacks
+        const displayName = order.customerName || 
+                          (order.user ? (order.user.username || order.user.email?.split('@')[0]) : null) || 
+                          order.email?.split('@')[0] || 
+                          "Guest";
+
         return {
           ...order,
-          status: currentStatus
+          status,
+          displayName,
+          formattedDate: order.orderDate ? 
+            new Date(order.orderDate).toLocaleDateString() : 
+            "N/A",
+          formattedAmount: new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            minimumFractionDigits: 2
+          }).format(order.totalAmount || 0)
         };
       });
-      
-      // Sort orders by date (newest first)
-      const sortedOrders = processedOrders.sort((a, b) => {
-        const dateA = a.orderDate ? new Date(a.orderDate) : new Date(0);
-        const dateB = b.orderDate ? new Date(b.orderDate) : new Date(0);
-        return dateB - dateA;
-      });
-      
-      // Set state with the sorted and processed orders
-      setOrders(sortedOrders);
-      
-      if (showLoading) {
-        setLoading(false);
-      }
+
+      setOrders(processedOrders);
     } catch (err) {
-      console.error("Error fetching orders:", err);
-      console.error("Error details:", err.response ? err.response.data : err.message);
-      setError("Failed to load orders. Please try refreshing the page.");
-      if (showLoading) {
-        setLoading(false);
-      }
+      console.error("Failed to fetch orders:", err);
+      setError(err.response?.data?.message || err.message || "Failed to load orders");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleStatusChange = async (orderId, newStatus) => {
+    if (!STATUS_OPTIONS[newStatus]) {
+      alert("Invalid status selected");
+      return;
+    }
+
     try {
-      // Find the current order
-      const currentOrder = orders.find(order => order.orderId === orderId);
-      if (!currentOrder) {
-        throw new Error(`Order #${orderId} not found`);
-      }
+      const response = await axios.put(
+        `http://localhost:8080/api/orders/${orderId}/status?status=${newStatus}`,
+        {},
+        { withCredentials: true }
+      );
 
-      // Check if status is already the same
-      if (currentOrder.status === newStatus) {
-        console.log(`Order #${orderId} is already in ${newStatus} status. No update needed.`);
-        return; // Exit early, no need to make an API call
-      }
-      
-      // Validate the new status
-      const validStatuses = ["PENDING", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"];
-      if (!validStatuses.includes(newStatus)) {
-        throw new Error(`Invalid status: ${newStatus}`);
-      }
-
-      console.log(`Updating order ${orderId} status to ${newStatus}`);
-      
-      const response = await axios.put(`http://localhost:8080/api/orders/${orderId}/status?status=${newStatus}`, {}, {
-        withCredentials: true
-      });
-      
-      if (response.data && response.data.status === newStatus) {
-        // Update the local state
-        setOrders(prevOrders => 
-          prevOrders.map(order => 
-            order.orderId === orderId ? { ...order, status: newStatus } : order
+      if (response.data?.status === newStatus) {
+        setOrders(prev => 
+          prev.map(order => 
+            order.orderId === orderId ? 
+              { ...order, status: newStatus } : 
+              order
           )
         );
-        alert(`Order #${orderId} status successfully updated to ${newStatus}`);
       } else {
-        console.warn("Status update response:", response.data);
-        await fetchOrders(); // Refresh to get the current state
-        alert("Status update may not have been applied correctly. The page will refresh to show the current status.");
+        throw new Error("Status update not confirmed by server");
       }
     } catch (err) {
-      console.error("Error updating order status:", err);
-      
-      let errorMessage = "Failed to update order status. ";
-      
-      if (err.response) {
-        const serverError = err.response.data?.error || err.response.data?.message;
-        if (err.response.status === 400) {
-          errorMessage += serverError || "Invalid status transition. Please follow the order flow: PENDING → PROCESSING → SHIPPED → DELIVERED";
-        } else if (err.response.status === 404) {
-          errorMessage += serverError || "Order not found.";
-        } else if (err.response.status === 500) {
-          errorMessage += serverError || "Server error occurred.";
-        }
-      } else if (err.message) {
-        errorMessage += err.message;
-      }
-      
-      alert(errorMessage);
-      await fetchOrders(); // Refresh to get the current state
+      console.error("Status update failed:", err);
+      alert(err.response?.data?.error || "Failed to update order status");
+      fetchOrders();
     }
   };
 
-  // Handle filter change
   const handleFilterChange = (newFilter) => {
-    console.log("Setting filter to:", newFilter);
-    setFilter(newFilter);
-    setCurrentPage(1); // Reset to first page
-    
-    // Update URL to reflect the filter (except for ALL)
-    if (newFilter === "ALL") {
-      navigate("/admin/orders");
-    } else {
-      navigate(`/admin/orders?status=${newFilter}`);
+    if (newFilter === "ALL" || STATUS_OPTIONS[newFilter]) {
+      setFilter(newFilter);
+      navigate(newFilter === "ALL" ? 
+        "/admin/orders" : 
+        `/admin/orders?status=${newFilter}`
+      );
     }
   };
 
-  // Filter orders based on status
   const filteredOrders = filter === "ALL" 
     ? orders 
-    : orders.filter(order => order.status === filter || 
-                   (!order.status && filter === "PENDING")); // Treat undefined status as PENDING
+    : orders.filter(order => order.status === filter);
 
-  // Pagination
-  const indexOfLastOrder = currentPage * ordersPerPage;
-  const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
-  const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
-  const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
+  const statusCounts = orders.reduce((acc, order) => {
+    acc[order.status] = (acc[order.status] || 0) + 1;
+    return acc;
+  }, {ALL: orders.length});
 
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  if (loading) return (
+    <div className="loading">
+      <div className="spinner"></div>
+      <p>Loading orders...</p>
+    </div>
+  );
 
-  // Add a function to refresh orders manually
-  const refreshOrders = () => {
-    setLoading(true);
-    fetchOrders();
-  };
-
-  if (loading) return <div className="loading">Loading orders...</div>;
   if (error) return (
     <div className="error">
+      <div className="error-icon">!</div>
       <div>{error}</div>
-      <button className="btn btn-primary mt-3" onClick={refreshOrders}>Try Again</button>
+      <button className="btn btn-primary mt-3" onClick={fetchOrders}>
+        Retry
+      </button>
     </div>
   );
 
@@ -235,112 +182,106 @@ const Orders = () => {
     <div className="admin-orders">
       <div className="admin-header">
         <h1>Manage Orders</h1>
-        <div className="order-summary">
-          <p>Showing {filteredOrders.length} of {orders.length} total orders</p>
-          <button className="btn btn-sm btn-outline-primary" onClick={refreshOrders}>
-            <i className="fa fa-refresh"></i> Refresh Orders
-          </button>
-        </div>
-        <div className="filter-controls">
-          <label htmlFor="status-filter">Filter by Status:</label>
-          <select
-            id="status-filter"
-            value={filter}
-            onChange={(e) => handleFilterChange(e.target.value)}
-          >
-            <option value="ALL">All Orders ({orders.length})</option>
-            <option value="PENDING">Pending ({orders.filter(o => o.status === "PENDING").length})</option>
-            <option value="PROCESSING">Processing ({orders.filter(o => o.status === "PROCESSING").length})</option>
-            <option value="SHIPPED">Shipped ({orders.filter(o => o.status === "SHIPPED").length})</option>
-            <option value="DELIVERED">Delivered ({orders.filter(o => o.status === "DELIVERED").length})</option>
-            <option value="CANCELLED">Cancelled ({orders.filter(o => o.status === "CANCELLED").length})</option>
-          </select>
+        <div className="order-controls">
+          <div className="order-summary">
+            <span>
+              Showing <strong>{filteredOrders.length}</strong> orders
+              {filter !== "ALL" && (
+                <span> (filtered from {orders.length} total)</span>
+              )}
+            </span>
+            <button 
+              className="btn btn-sm btn-outline-primary" 
+              onClick={fetchOrders}
+              disabled={loading}
+            >
+              <i className="fa fa-refresh"></i> Refresh
+            </button>
+          </div>
+          
+          <div className="filter-controls">
+            <label htmlFor="status-filter">Filter by Status:</label>
+            <select
+              id="status-filter"
+              value={filter}
+              onChange={(e) => handleFilterChange(e.target.value)}
+              className="status-filter"
+              disabled={loading}
+            >
+              {Object.entries(STATUS_OPTIONS).map(([key, value]) => (
+                <option key={key} value={value}>
+                  {key} ({statusCounts[value] || 0})
+                </option>
+              ))}
+              <option value="ALL">All Orders ({statusCounts.ALL})</option>
+            </select>
+          </div>
         </div>
       </div>
       
-      {currentOrders.length === 0 ? (
+      {filteredOrders.length === 0 ? (
         <div className="no-orders">
+          <i className="fa fa-box-open"></i>
           <p>No orders found</p>
+          {filter !== "ALL" && (
+            <button 
+              className="btn btn-link" 
+              onClick={() => handleFilterChange("ALL")}
+            >
+              Clear filters
+            </button>
+          )}
         </div>
       ) : (
-        <>
-          <div className="orders-table-container">
-            <table className="orders-table">
-              <thead>
-                <tr>
-                  <th>Order ID</th>
-                  <th>Customer</th>
-                  <th>Date</th>
-                  <th>Total</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+        <div className="orders-table-container">
+          <table className="orders-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Date</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredOrders.map(order => (
+                <tr key={order.orderId}>
+                  <td>#{order.orderId}</td>
+                  <td>
+                    {order.displayName}
+                    {order.email && <div className="order-email">{order.email}</div>}
+                  </td>
+                  <td>{order.formattedDate}</td>
+                  <td>{order.formattedAmount}</td>
+                  <td>
+                    <select
+                      value={order.status}
+                      onChange={(e) => handleStatusChange(order.orderId, e.target.value)}
+                      className={`status-select ${order.status.toLowerCase()}`}
+                      disabled={loading}
+                    >
+                      {Object.values(STATUS_OPTIONS).map(status => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <Link 
+                      to={`/admin/orders/${order.orderId}`} 
+                      className="btn btn-sm btn-info"
+                    >
+                      <i className="fa fa-eye"></i> View
+                    </Link>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {currentOrders.map(order => (
-                  <tr key={order.orderId}>
-                    <td>#{order.orderId}</td>
-                    <td>{order.customerName || order.user?.username || "Guest"}</td>
-                    <td>{order.orderDate ? new Date(order.orderDate).toLocaleDateString() : "N/A"}</td>
-                    <td>₹{parseFloat(order.totalAmount || 0).toFixed(2)}</td>
-                    <td>
-                      <select
-                        value={order.status || "PENDING"}
-                        onChange={(e) => handleStatusChange(order.orderId, e.target.value)}
-                        className={`status-select ${order.status ? order.status.toLowerCase() : 'pending'}`}
-                      >
-                        <option value="PENDING">Pending</option>
-                        <option value="PROCESSING">Processing</option>
-                        <option value="SHIPPED">Shipped</option>
-                        <option value="DELIVERED">Delivered</option>
-                        <option value="CANCELLED">Cancelled</option>
-                      </select>
-                    </td>
-                    <td>
-                      <Link 
-                        to={`/admin/orders/${order.orderId}`} 
-                        className="btn btn-sm btn-info"
-                      >
-                        View Details
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="pagination">
-              <button 
-                onClick={() => paginate(currentPage - 1)} 
-                disabled={currentPage === 1}
-                className="page-btn"
-              >
-                Previous
-              </button>
-              
-              {[...Array(totalPages).keys()].map(number => (
-                <button
-                  key={number + 1}
-                  onClick={() => paginate(number + 1)}
-                  className={`page-btn ${currentPage === number + 1 ? 'active' : ''}`}
-                >
-                  {number + 1}
-                </button>
               ))}
-              
-              <button 
-                onClick={() => paginate(currentPage + 1)} 
-                disabled={currentPage === totalPages}
-                className="page-btn"
-              >
-                Next
-              </button>
-            </div>
-          )}
-        </>
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

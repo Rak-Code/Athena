@@ -1,9 +1,9 @@
 package com.example.backend.model;
 
-
-
 import jakarta.persistence.*;
 import lombok.*;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +27,7 @@ public class User {
     private String email;
 
     @Column(nullable = false)
+    @JsonIgnore
     private String password;
 
     @Enumerated(EnumType.STRING)
@@ -39,6 +40,10 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Address> addresses = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference("user-orders")
+    private List<Order> orders = new ArrayList<>();
 
     // Helper method to add address
     public void addAddress(Address address) {
@@ -92,4 +97,3 @@ public class User {
         this.role = role;
     }
 }
-

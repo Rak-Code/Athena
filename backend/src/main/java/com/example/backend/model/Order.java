@@ -2,9 +2,13 @@ package com.example.backend.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "Orders")
@@ -18,9 +22,13 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long orderId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference("user-orders")
     private User user;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<OrderDetail> orderDetails = new ArrayList<>();
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
@@ -136,6 +144,14 @@ public class Order {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public List<OrderDetail> getOrderDetails() {
+        return orderDetails;
+    }
+
+    public void setOrderDetails(List<OrderDetail> orderDetails) {
+        this.orderDetails = orderDetails;
     }
 
     public void setStatus(Status status) {

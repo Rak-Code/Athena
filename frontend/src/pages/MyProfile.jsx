@@ -389,46 +389,46 @@ const MyProfile = () => {
                       {orders.map((order) => (
                         <ListGroup.Item
                           key={order.orderId}
-                          className="mb-3 border rounded-3 p-4 hover-shadow"
+                          className="mb-3 border rounded-2"
                         >
-                          <Row className="align-items-center g-3">
-                            <Col md={3}>
-                              <p className="text-muted mb-1 small">Order ID</p>
-                              <p className="fw-bold text-dark mb-0">
-                                #{order.orderId}
-                              </p>
+                          <Row className="align-items-center">
+                            <Col>
+                              <div className="d-flex align-items-center">
+                                <div>
+                                  <p className="text-muted mb-1 small">Order ID</p>
+                                  <p className="fw-bold mb-0">#{order.orderId}</p>
+                                </div>
+                              </div>
                             </Col>
-                            <Col md={3}>
+                            <Col>
                               <p className="text-muted mb-1 small">Date</p>
                               <p className="fw-bold mb-0">
                                 {new Date(order.orderDate).toLocaleDateString()}
                               </p>
                             </Col>
-                            <Col md={3}>
+                            <Col>
                               <p className="text-muted mb-1 small">Total</p>
                               <p className="fw-bold text-success mb-0">
                                 ${order.totalAmount}
                               </p>
                             </Col>
-                            <Col md={3}>
-                              <div className="d-flex flex-column align-items-end">
-                                <Badge
-                                  className="rounded-pill px-3 py-2 mb-2"
-                                  bg={
-                                    order.status === "DELIVERED"
-                                      ? "success"
-                                      : order.status === "SHIPPED"
-                                      ? "info"
-                                      : order.status === "PROCESSING"
-                                      ? "warning"
-                                      : "secondary"
-                                  }
-                                >
-                                  {order.status}
-                                </Badge>
+                            <Col className="text-end">
+                              <Badge
+                                className="rounded-pill px-3 py-2"
+                                bg={
+                                  order.status === "PENDING"
+                                    ? "secondary"
+                                    : order.status === "PROCESSING"
+                                    ? "warning"
+                                    : "success"
+                                }
+                              >
+                                {order.status}
+                              </Badge>
+                              <div className="mt-2">
                                 <Link
-                                  to={`/order-confirmation/${order.orderId}`}
-                                  className="btn btn-sm btn-outline-dark rounded-pill px-3"
+                                  to={`/orders/${order.orderId}`}
+                                  className="btn btn-sm btn-link text-dark text-decoration-none"
                                 >
                                   View Details
                                 </Link>

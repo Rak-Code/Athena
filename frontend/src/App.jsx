@@ -12,6 +12,7 @@ import Checkout from "./pages/Checkout";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import Wishlist from "./components/Wishlist";
 import MyProfile from "./pages/MyProfile";
+import OrderDetails from "./pages/user/OrderDetails";
 
 // Admin imports
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -101,6 +102,14 @@ const App = () => {
             <Route
               path="/order-confirmation/:orderId"
               element={<OrderConfirmation />}
+            />
+            <Route
+              path="/orders/:orderId"
+              element={
+                <ProtectedRoute user={user} requiredRole="USER">
+                  <OrderDetails />
+                </ProtectedRoute>
+              }
             />
 
             {/* Admin Routes */}

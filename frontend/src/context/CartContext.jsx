@@ -31,7 +31,7 @@ export const CartProvider = ({ children }) => {
     setCart(prevCart => {
       // Check if the item already exists in the cart
       const existingItemIndex = prevCart.findIndex(
-        item => item.productId === product.id && 
+        item => item.productId === product.productId && 
                 item.variantSize === variant.size && 
                 item.variantColor === variant.color
       );
@@ -45,7 +45,7 @@ export const CartProvider = ({ children }) => {
         // Add new item to cart
         return [...prevCart, {
           id: Date.now().toString(),
-          productId: product.id,
+          productId: product.productId || product.id,
           name: product.name,
           price: product.price,
           imageUrl: product.imageUrl,

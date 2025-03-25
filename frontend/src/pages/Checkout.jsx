@@ -61,15 +61,22 @@ const Checkout = () => {
       shippingAddress: formattedAddress,
       billingAddress: formattedAddress, // Using the same address for both
       paymentMethod: formData.paymentMethod,
-      cartItems: cart.map(item => ({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity
-      }))
+      cartItems: cart.map(item => {
+        console.log("Processing cart item:", item);
+        const cartItem = {
+          id: item.productId,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity
+        };
+        console.log("Formatted cart item:", cartItem);
+        return cartItem;
+      })
     };
 
-    console.log("Sending order data:", orderData);
+    console.log("Original cart items:", cart);
+    console.log("Formatted cart items:", orderData.cartItems);
+    console.log("Full order data being sent:", JSON.stringify(orderData, null, 2));
 
     try {
       const response = await axios.post("http://localhost:8080/api/orders", orderData, {

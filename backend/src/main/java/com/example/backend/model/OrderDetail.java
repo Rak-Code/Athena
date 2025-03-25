@@ -1,30 +1,32 @@
 package com.example.backend.model;
 
-
-
 import jakarta.persistence.*;
 import lombok.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "OrderDetails")
+@Table(name = "order_details")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class OrderDetail {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long orderDetailId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
+    @JsonIgnoreProperties({"orderDetails", "user", "hibernateLazyInitializer", "handler"})
     private Order order;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "product_id", nullable = false)
+    @JsonIgnoreProperties({"category", "hibernateLazyInitializer", "handler"})
     private Product product;
 
     @Column(nullable = false)

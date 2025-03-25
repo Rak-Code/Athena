@@ -67,8 +67,15 @@ const ProductDetail = () => {
     }
 
     setAddingToCart(true);
+    console.log("Adding product to cart:", product);
+    console.log("Product ID:", product.productId || product.id);
+    
     const variant = { size: selectedSize };
-    addToCart(product, variant, quantity);
+    addToCart({
+      ...product,
+      productId: product.productId || product.id // Ensure we have the product ID
+    }, variant, quantity);
+    
     setMessage("Added to cart!");
     setAddingToCart(false);
 

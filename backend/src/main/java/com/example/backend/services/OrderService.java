@@ -36,7 +36,7 @@ public class OrderService {
 
     // Get order by ID
     public Optional<Order> getOrderById(Long orderId) {
-        return orderRepository.findById(orderId);
+        return orderRepository.findByIdWithUser(orderId);
     }
 
     // Update order status

@@ -10,7 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/order-details")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class OrderDetailController {
 
     @Autowired
@@ -26,7 +26,23 @@ public class OrderDetailController {
     // Get order details by order ID
     @GetMapping("/order/{orderId}")
     public ResponseEntity<List<OrderDetail>> getOrderDetailsByOrderId(@PathVariable Long orderId) {
-        List<OrderDetail> orderDetails = orderDetailService.getOrderDetailsByOrderId(orderId);
-        return ResponseEntity.ok(orderDetails);
+        try {
+            System.out.println("Fetching order details for orderId: " + orderId);
+            List<OrderDetail> orderDetails = orderDetailService.getOrderDetailsByOrderId(orderId);
+            System.out.println("Found " + orderDetails.size() + " order details");
+            if (!orderDetails.isEmpty()) {
+                OrderDetail firstDetail = orderDetails.get(0);
+                System.out.println("Sample order detail - Product: " + 
+                    (firstDetail.getProduct() != null ? firstDetail.getProduct().getName() : "null") +
+                    ", Quantity: " + firstDetail.getQuantity() +
+                    ", Price: " + firstDetail.getPrice());
+            }
+            return ResponseEntity.ok(orderDetails);
+        } catch (Exception e) {
+            System.err.println("Error fetching order details: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500)
+                .body(List.of()); // Return empty list on error
+        }
     }
 }
