@@ -165,24 +165,24 @@ const Checkout = () => {
       const shipping = totalAmount > 500 ? 0 : 50;
       const total = totalAmount + tax + shipping;
 
-      const orderData = {
+    const orderData = {
         userId,
         customerName: formData.fullName || userData.username,
         email: formData.email || userData.email,
-        phone: formData.phone,
+      phone: formData.phone,
         shippingAddress: `${addressLine1}, ${city}, ${state}, ${postalCode}, ${country}`,
         billingAddress: `${addressLine1}, ${city}, ${state}, ${postalCode}, ${country}`,
         paymentMethod,
         totalAmount: total,
-        cartItems: cart.map(item => ({
+      cartItems: cart.map(item => ({
           productId: parseInt(item.productId),
-          name: item.name,
+        name: item.name,
           price: parseFloat(item.price),
           quantity: parseInt(item.quantity),
           variantSize: item.variantSize || null,
           variantColor: item.variantColor || null
-        }))
-      };
+      }))
+    };
 
       const response = await axios.post('http://localhost:8080/api/orders', orderData);
       const orderId = response.data.orderId || response.data.id;
@@ -234,36 +234,36 @@ const Checkout = () => {
               {["fullName", "email", "phone"].map(field => (
                 <div className="form-group" key={field}>
                   <label htmlFor={field}>{field.replace(/([A-Z])/g, ' $1').trim()}</label>
-                  <input
+                <input 
                     type={field === 'email' ? 'email' : field === 'phone' ? 'tel' : 'text'}
                     id={field}
                     value={formData[field]}
                     onChange={(e) => setFormData({...formData, [field]: e.target.value})}
                     placeholder={`Enter your ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`}
-                    required
-                  />
+                  required 
+                />
                 </div>
               ))}
-            </div>
-
+              </div>
+              
             <div className="form-section">
               <h3>Shipping Address</h3>
               {["addressLine1", "city", "state", "postalCode"].map(field => (
                 <div className="form-group" key={field}>
                   <label htmlFor={field}>{field.replace(/([A-Z])/g, ' $1').trim()}</label>
-                  <input
+                <input 
                     type="text"
                     id={field}
                     value={formData[field]}
                     onChange={(e) => setFormData({...formData, [field]: e.target.value})}
                     placeholder={`Enter your ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`}
-                    required
-                  />
-                </div>
+                  required 
+                />
+              </div>
               ))}
               <div className="form-group">
                 <label htmlFor="country">Country</label>
-                <input
+                <input 
                   type="text"
                   id="country"
                   value={formData.country}
@@ -271,7 +271,7 @@ const Checkout = () => {
                 />
               </div>
             </div>
-
+            
             <div className="form-section">
               <h3>Payment Method</h3>
               <div className="mb-4">
@@ -279,57 +279,57 @@ const Checkout = () => {
                   { value: "cod", label: "Cash on Delivery", desc: "Pay when delivered" },
                   { value: "razorpay", label: "Razorpay", desc: "Secure online payments" }
                 ].map(method => (
-                  <div 
+                <div 
                     key={method.value}
-                    className="d-flex align-items-center p-3 mb-2 rounded" 
-                    style={{ 
+                  className="d-flex align-items-center p-3 mb-2 rounded" 
+                  style={{ 
                       backgroundColor: formData.paymentMethod === method.value ? "#f0f7ff" : "#f8f9fa",
                       border: `1px solid ${formData.paymentMethod === method.value ? "#cce5ff" : "#dee2e6"}`,
-                      cursor: "pointer"
-                    }}
+                    cursor: "pointer"
+                  }}
                     onClick={() => setFormData({...formData, paymentMethod: method.value})}
-                  >
-                    <input 
-                      type="radio" 
+                >
+                  <input 
+                    type="radio" 
                       id={method.value} 
-                      name="paymentMethod" 
+                    name="paymentMethod" 
                       value={method.value} 
                       checked={formData.paymentMethod === method.value} 
                       onChange={() => {}} 
-                      className="me-3"
+                    className="me-3"
                     />
                     <label htmlFor={method.value} className="mb-0 w-100">
                       <span className="fw-bold">{method.label}</span>
                       <p className="text-muted mb-0 small">{method.desc}</p>
-                    </label>
-                  </div>
+                  </label>
+                </div>
                 ))}
               </div>
             </div>
-
+            
             <button type="submit" className="btn btn-primary w-100 py-3 rounded" disabled={loading}>
               {loading ? "Processing..." : "Place Order"}
             </button>
           </form>
         </div>
-
+        
         <div className="order-summary">
           <h3>Order Summary</h3>
-          <div className="cart-items">
+              <div className="cart-items">
             {cart.map(item => (
               <div className="cart-item" key={`${item.productId}-${item.variantSize || 'no-size'}-${item.variantColor || 'no-color'}`}>
-                <div className="item-details">
-                  <h4>{item.name}</h4>
-                  {item.variantSize && <p>Size: {item.variantSize}</p>}
-                  {item.variantColor && <p>Color: {item.variantColor}</p>}
-                  <p>Quantity: {item.quantity}</p>
-                </div>
+                    <div className="item-details">
+                      <h4>{item.name}</h4>
+                      {item.variantSize && <p>Size: {item.variantSize}</p>}
+                      {item.variantColor && <p>Color: {item.variantColor}</p>}
+                      <p>Quantity: {item.quantity}</p>
+                    </div>
                 <div className="item-price">₹{(item.price * item.quantity).toFixed(2)}</div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          
-          <div className="summary-totals">
+              
+              <div className="summary-totals">
             {[
               { label: "Subtotal", value: totalAmount },
               { label: "Shipping", value: shipping, format: v => v === 0 ? "Free" : `₹${v.toFixed(2)}` },

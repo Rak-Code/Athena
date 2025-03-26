@@ -35,6 +35,7 @@ import axios from "axios";
 import ContactUsForm from "../components/ContactUsForm";
 import GiftCards from "../components/GiftCards";
 import InviteFriends from "../components/InviteFriends";
+import AddressSection from "../components/AddressSection";
 
 const MyProfile = () => {
   const navigate = useNavigate();
@@ -456,9 +457,7 @@ const MyProfile = () => {
                 {/* SHIPPING ADDRESSES */}
                 <Tab.Pane eventKey="shippingAddresses">
                   <h4 className="mb-4 fw-bold text-dark">Shipping Addresses</h4>
-                  <p className="text-muted">
-                    Here you can manage your saved shipping addresses. (Placeholder)
-                  </p>
+                  <AddressSection userId={user?.userId} />
                 </Tab.Pane>
 
                 {/* ORDER HISTORY TAB */}

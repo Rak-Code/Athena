@@ -16,27 +16,60 @@ const Register = ({ handleCloseModal, setShowRegister }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validate form data
+    if (!formData.name.trim()) {
+      alert("Username is required");
+      return;
+    }
+    if (!formData.email.trim()) {
+      alert("Email is required");
+      return;
+    }
+    if (!formData.password.trim()) {
+      alert("Password is required");
+      return;
+    }
+
     // Map frontend data to backend schema
     const userData = {
-      username: formData.name, // Map 'name' to 'username'
-      email: formData.email,
-      password: formData.password,
+      username: formData.name.trim(),
+      email: formData.email.trim(),
+      password: formData.password,  // Don't trim password as it might contain intentional spaces
+      role: "USER"
     };
+
+    console.log("Sending registration data:", { ...userData, password: '***' });
 
     try {
       // Send POST request to the backend
-      const response = await axios.post("http://localhost:8080/api/users/register", userData, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await axios.post(
+        "http://localhost:8080/api/users/register",
+        JSON.stringify(userData),  // Explicitly stringify the data
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          }
+        }
+      );
 
       console.log("Registration successful:", response.data);
-      alert("Registration successful!");
-      handleCloseModal(); // Close the modal after successful registration
+      alert("Registration successful! Please login.");
+      handleCloseModal();
     } catch (error) {
-      console.error("Registration failed:", error.response?.data || error.message);
-      alert("Registration failed. Please try again.");
+      console.error("Registration failed:", error);
+      
+      // Handle different types of errors
+      if (error.response) {
+        // Log the full error response for debugging
+        console.error("Error response:", error.response);
+        const errorMessage = error.response.data.message || "Registration failed. Please try again.";
+        alert(errorMessage);
+      } else if (error.request) {
+        alert("Unable to connect to the server. Please check your internet connection.");
+      } else {
+        alert("An error occurred. Please try again.");
+      }
     }
   };
 

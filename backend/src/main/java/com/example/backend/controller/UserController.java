@@ -1,6 +1,7 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.LoginRequest;
+import com.example.backend.dto.RegisterRequest;
 import com.example.backend.model.User;
 import com.example.backend.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +27,51 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        User createdUser = userService.createUser(user);
-        return ResponseEntity.ok(createdUser);
+    public ResponseEntity<?> createUser(@RequestBody RegisterRequest registerRequest) {
+        try {
+            // Validate required fields
+            if (registerRequest.getUsername() == null || registerRequest.getUsername().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Username is required"));
+            }
+            if (registerRequest.getEmail() == null || registerRequest.getEmail().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Email is required"));
+            }
+            if (registerRequest.getPassword() == null || registerRequest.getPassword().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Password is required"));
+            }
+
+            // Check if username already exists
+            if (userService.findByUsername(registerRequest.getUsername()).isPresent()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Username already exists"));
+            }
+
+            // Check if email already exists
+            if (userService.findByEmail(registerRequest.getEmail()).isPresent()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Email already exists"));
+            }
+
+            // Create new user
+            User user = new User();
+            user.setUsername(registerRequest.getUsername().trim());
+            user.setEmail(registerRequest.getEmail().trim());
+            user.setPassword(registerRequest.getPassword().trim());
+            user.setRole(User.Role.USER);
+
+            User createdUser = userService.createUser(user);
+            
+            // Create a response object without sensitive information
+            Map<String, Object> response = new HashMap<>();
+            response.put("userId", createdUser.getUserId());
+            response.put("username", createdUser.getUsername());
+            response.put("email", createdUser.getEmail());
+            response.put("role", createdUser.getRole().toString());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error during user registration: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("message", "Registration failed: " + e.getMessage()));
+        }
     }
 
     @GetMapping
