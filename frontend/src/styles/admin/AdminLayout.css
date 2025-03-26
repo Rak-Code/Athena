@@ -18,9 +18,10 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
   
-  .sidebar-header h2 {
+  .sidebar-header h3 {
     margin: 0;
     font-size: 20px;
+    color: white;
   }
   
   .sidebar-nav ul {
@@ -34,15 +35,18 @@
   }
   
   .sidebar-nav a {
-    display: block;
+    display: flex;
+    align-items: center;
     padding: 15px 20px;
     color: rgba(255, 255, 255, 0.8);
     text-decoration: none;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
+    gap: 10px;
   }
   
   .sidebar-nav a:hover {
     background-color: rgba(255, 255, 255, 0.1);
+    color: white;
   }
   
   .sidebar-nav a.active {
@@ -50,10 +54,10 @@
     color: white;
   }
   
-  .sidebar-nav i {
-    margin-right: 10px;
+  .nav-icon {
     width: 20px;
-    text-align: center;
+    height: 20px;
+    flex-shrink: 0;
   }
   
   .back-to-site {
@@ -64,6 +68,28 @@
   .admin-content {
     flex: 1;
     margin-left: 250px;
+    padding: 20px;
     background-color: #f5f7fa;
     min-height: 100vh;
+  }
+  
+  /* Active state styles */
+  .sidebar-nav li.active a {
+    background-color: #3498db;
+    color: white;
+  }
+  
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    .admin-sidebar {
+      width: 200px;
+    }
+    
+    .admin-content {
+      margin-left: 200px;
+    }
+    
+    .sidebar-nav a {
+      padding: 12px 15px;
+    }
   }

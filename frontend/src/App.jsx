@@ -21,6 +21,7 @@ import AdminProducts from "./pages/admin/Products";
 import AdminAddProduct from "./pages/admin/AddProduct";
 import AdminEditProduct from "./pages/admin/EditProduct";
 import AdminOrders from "./pages/admin/Orders";
+import AdminReviews from "./pages/admin/Reviews";
 
 // Protected Route
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -210,6 +211,16 @@ const App = () => {
                 <ProtectedRoute user={user} requiredRole="ADMIN">
                   <AdminLayout>
                     <AdminOrders />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/reviews"
+              element={
+                <ProtectedRoute user={user} requiredRole="ADMIN">
+                  <AdminLayout>
+                    <AdminReviews />
                   </AdminLayout>
                 </ProtectedRoute>
               }

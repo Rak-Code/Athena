@@ -2,6 +2,7 @@
 import React, { useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import "../../styles/admin/AdminLayout.css";
+import { FaHome, FaBox, FaShoppingBag, FaStar, FaArrowLeft } from "react-icons/fa";
 
 const AdminLayout = ({ children }) => {
   const navigate = useNavigate();
@@ -33,17 +34,30 @@ const AdminLayout = ({ children }) => {
         </div>
         <nav className="sidebar-nav">
           <ul>
-            <li className={isActive("/admin") && !isActive("/admin/products") && !isActive("/admin/orders") ? "active" : ""}>
-              <Link to="/admin">Dashboard</Link>
+            <li className={isActive("/admin") && !isActive("/admin/products") && !isActive("/admin/orders") && !isActive("/admin/reviews") ? "active" : ""}>
+              <Link to="/admin">
+                <FaHome className="nav-icon" /> Dashboard
+              </Link>
             </li>
             <li className={isActive("/admin/products") ? "active" : ""}>
-              <Link to="/admin/products">Products</Link>
+              <Link to="/admin/products">
+                <FaBox className="nav-icon" /> Products
+              </Link>
             </li>
             <li className={isActive("/admin/orders") ? "active" : ""}>
-              <Link to="/admin/orders">Orders</Link>
+              <Link to="/admin/orders">
+                <FaShoppingBag className="nav-icon" /> Orders
+              </Link>
+            </li>
+            <li className={isActive("/admin/reviews") ? "active" : ""}>
+              <Link to="/admin/reviews">
+                <FaStar className="nav-icon" /> Reviews
+              </Link>
             </li>
             <li>
-              <Link to="/" onClick={() => console.log("Returning to main site")}>Back to Site</Link>
+              <Link to="/" className="back-to-site">
+                <FaArrowLeft className="nav-icon" /> Back to Site
+              </Link>
             </li>
           </ul>
         </nav>
