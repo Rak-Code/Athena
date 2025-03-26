@@ -228,13 +228,8 @@ export const WishlistProvider = ({ children, user }) => {
     }
   };
 
-  const isInWishlist = async (productId) => {
-    if (!productId) {
-      console.warn("isInWishlist called with invalid productId");
-      return false;
-    }
-    
-    if (!wishlistItems || !Array.isArray(wishlistItems) || wishlistItems.length === 0) {
+  const isInWishlist = (productId) => {
+    if (!productId || !wishlistItems || !Array.isArray(wishlistItems)) {
       return false;
     }
     

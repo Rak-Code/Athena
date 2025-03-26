@@ -55,6 +55,23 @@ const Reviews = () => {
     return matchesSearch && review.rating === parseInt(filter);
   });
 
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid Date';
+    }
+  };
+
   if (loading) {
     return (
       <div className="loading">
@@ -159,7 +176,7 @@ const Reviews = () => {
                     </div>
                   </td>
                   <td>
-                    {new Date(review.createdAt).toLocaleDateString()}
+                    {formatDate(review.createdAt)}
                   </td>
                   <td>
                     <Button

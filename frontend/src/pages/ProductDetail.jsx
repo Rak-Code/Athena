@@ -5,6 +5,7 @@ import Footer from "../components/Footer";
 import { FaHeart } from "react-icons/fa";
 import { useWishlist } from "../context/WishlistContext";
 import ReviewsSection from "../components/ReviewsSection";
+import DiscountBanner from "../components/DiscountBanner";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -18,10 +19,9 @@ const ProductDetail = () => {
   const { addToWishlist, removeByUserAndProduct, isInWishlist, user } = useWishlist();
   const [addingToWishlist, setAddingToWishlist] = useState(false);
   const [inWishlist, setInWishlist] = useState(false);
-  const [couponCode, setCouponCode] = useState(""); // Added coupon code state
+  const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [couponApplied, setCouponApplied] = useState(false);
-
 
   useEffect(() => {
     if (!id) {
@@ -51,19 +51,23 @@ const ProductDetail = () => {
 
   // Check if the product is in the user's wishlist
   useEffect(() => {
-    console.log("User object in ProductDetail:", user);
-    if (product && user) {
-      try {
-        const productId = product.productId || product.id;
-        console.log("Checking if product is in wishlist, productId:", productId);
-        setInWishlist(isInWishlist(productId));
-      } catch (error) {
-        console.error("Error checking wishlist status:", error);
+    const checkWishlistStatus = async () => {
+      if (product && user) {
+        try {
+          const productId = product.productId || product.id;
+          const isProductInWishlist = await isInWishlist(productId);
+          setInWishlist(isProductInWishlist);
+        } catch (error) {
+          console.error("Error checking wishlist status:", error);
+          setInWishlist(false);
+        }
+      } else {
         setInWishlist(false);
       }
-    }
-  }, [product, isInWishlist, user]);
-
+    };
+    
+    checkWishlistStatus();
+  }, [product, user, isInWishlist]);
 
   const handleAddToCart = () => {
     if (!selectedSize) {
@@ -76,11 +80,15 @@ const ProductDetail = () => {
     console.log("Product ID:", product.productId || product.id);
 
     const variant = { size: selectedSize };
-    addToCart({
-      ...product,
-      productId: product.productId || product.id, // Ensure we have the product ID
-      price: product.price - discount // Subtract discount when adding to cart
-    }, variant, quantity);
+    addToCart(
+      {
+        ...product,
+        productId: product.productId || product.id,
+        price: product.price - discount, // Subtract discount when adding to cart
+      },
+      variant,
+      quantity
+    );
 
     setMessage("Added to cart!");
     setAddingToCart(false);
@@ -98,7 +106,7 @@ const ProductDetail = () => {
       console.log("User userId:", user.userId);
     }
 
-    // Check if user is logged in - only check if user exists, not the ID properties
+    // Check if user is logged in
     if (!user) {
       console.log("User not logged in");
       setMessage("Please log in to use the wishlist feature");
@@ -111,19 +119,17 @@ const ProductDetail = () => {
       console.log("Handling wishlist for product ID:", productId);
 
       if (inWishlist) {
-        // Use removeByUserAndProduct instead of removeFromWishlist
         removeByUserAndProduct(productId);
         setInWishlist(false);
         setMessage("Removed from wishlist!");
       } else {
-        // Create a complete product object to ensure all required fields are present
         const productToAdd = {
           id: product.id,
           productId: product.productId || product.id,
           name: product.name,
           price: product.price,
           imageUrl: product.imageUrl,
-          description: product.description
+          description: product.description,
         };
 
         console.log("Adding product to wishlist:", productToAdd);
@@ -149,14 +155,11 @@ const ProductDetail = () => {
     }
   };
 
-
-
   const handleApplyCoupon = () => {
-    // Replace 'VALID_COUPON' with the actual coupon code you want to use
     const VALID_COUPON = "DISCOUNT200";
 
     if (couponCode === VALID_COUPON && !couponApplied) {
-      setDiscount(200); // Set the discount amount
+      setDiscount(200);
       setCouponApplied(true);
       setMessage("Coupon Applied! ₹200 off.");
     } else if (couponApplied) {
@@ -168,11 +171,15 @@ const ProductDetail = () => {
     setTimeout(() => setMessage(""), 3000);
   };
 
-
   if (loading) return <p className="text-center text-gray-500 text-lg">Loading...</p>;
 
   return (
     <div className="container mx-auto px-4 py-12 bg-gray-50 min-h-screen">
+      {/* Add margin around the banner */}
+      <div className="mb-6">
+        <DiscountBanner />
+      </div>
+
       {product ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mb-12">
           {/* Product Image */}
@@ -216,9 +223,11 @@ const ProductDetail = () => {
                   Apply
                 </button>
               </div>
+              {/* Show a green success message below coupon button if coupon applied */}
+              {couponApplied && (
+                <p className="text-green-600 mt-2">{message}</p>
+              )}
             </div>
-
-
 
             <p className="text-gray-600 text-lg leading-relaxed">{product.description}</p>
 
@@ -230,9 +239,10 @@ const ProductDetail = () => {
                   <button
                     key={size}
                     className={`px-4 py-2 border rounded-full text-sm font-medium transition-all duration-300
-                      ${selectedSize === size
-                        ? "bg-blue-600 text-white border-blue-600 shadow-md"
-                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100 hover:border-gray-400"
+                      ${
+                        selectedSize === size
+                          ? "bg-blue-600 text-white border-blue-600 shadow-md"
+                          : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100 hover:border-gray-400"
                       } focus:outline-none focus:ring-2 focus:ring-blue-300 active:scale-95`}
                     onClick={() => setSelectedSize(size)}
                   >
@@ -252,7 +262,9 @@ const ProductDetail = () => {
                 >
                   -
                 </button>
-                <span className="px-4 py-1 border border-gray-300 rounded-lg text-gray-700">{quantity}</span>
+                <span className="px-4 py-1 border border-gray-300 rounded-lg text-gray-700">
+                  {quantity}
+                </span>
                 <button
                   onClick={() => setQuantity(quantity + 1)}
                   className="px-3 py-1 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-all duration-300"
@@ -266,9 +278,10 @@ const ProductDetail = () => {
             <div className="flex gap-4 mb-6">
               <button
                 className={`flex items-center gap-2 px-6 py-3 rounded-pill text-sm font-semibold transition-all duration-300 shadow-md
-                  ${inWishlist
-                    ? "bg-red-500 text-white hover:bg-red-600"
-                    : "bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200"
+                  ${
+                    inWishlist
+                      ? "bg-red-500 text-white hover:bg-red-600"
+                      : "bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200"
                   } ${addingToWishlist ? "opacity-50 cursor-not-allowed" : ""}`}
                 onClick={handleWishlist}
                 disabled={addingToWishlist}
@@ -287,11 +300,15 @@ const ProductDetail = () => {
               </button>
             </div>
 
-            {/* Feedback Message */}
-            {message && (
+            {/* General Feedback Message (e.g., wishlist/cart) */}
+            {message && !message.includes("Coupon") && (
               <p
                 className={`text-center py-2 px-4 rounded-pill text-sm font-medium
-                  ${message.includes("Added") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+                  ${
+                    message.includes("Added") || message.includes("Removed")
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
               >
                 {message}
               </p>

@@ -31,7 +31,7 @@ const ProductCard = ({ product }) => {
       />
       <Card.Body className="text-center py-3">
         <Card.Title className="fs-6 mb-2">{product?.name || "Unknown"}</Card.Title>
-        <Card.Text className="text-muted">${product?.price || "N/A"}</Card.Text>
+        <Card.Text className="text-muted">₹{product?.price || "N/A"}</Card.Text>
       </Card.Body>
     </Card>
   );

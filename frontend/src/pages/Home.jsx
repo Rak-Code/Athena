@@ -6,7 +6,7 @@ import CarouselComponent from "../components/CarouselComponent";
 import ProductList from "../components/ProductList";
 import Footer from "../components/Footer";
 import NewsletterSubscription from "../components/NewsletterSubscription";
-
+import DiscountBanner from "../components/DiscountBanner";
 // New Chatbot Button Import
 import ChatbotButton from "../components/ChatBotButton";
 
@@ -36,6 +36,7 @@ const Home = ({ searchTerm }) => {
 
   return (
     <Container className="mt-4 position-relative">
+      <DiscountBanner />
       {/* Show Carousel only when there is no search */}
       {!searchTerm && <CarouselComponent />}
 
