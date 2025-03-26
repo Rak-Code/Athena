@@ -8,7 +8,7 @@ const CarouselComponent = () => {
       <Carousel.Item>
         <img
           className="d-block w-100"
-          src="https://images.pexels.com/photos/4456815/pexels-photo-4456815.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+          src="https://i.imgur.com/xXc9F7l.png"
           alt="First slide"
           style={{ height: "500px", objectFit: "cover" }}
         />

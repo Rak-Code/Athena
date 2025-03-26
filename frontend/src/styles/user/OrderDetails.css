@@ -326,4 +326,76 @@
 
 .order-items-table tfoot td {
   padding: 1rem !important;
+}
+
+/* Review Form Styles */
+.review-form-row {
+  background-color: #f8f9fa;
+}
+
+.review-form {
+  padding: 1.5rem;
+  margin: 1rem 0;
+  border-radius: 8px;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.review-form h4 {
+  margin-bottom: 1.5rem;
+  color: #333;
+  font-size: 1.2rem;
+}
+
+.rating-input,
+.comment-input {
+  margin-bottom: 1rem;
+}
+
+.rating-input label,
+.comment-input label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.rating-input select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  width: 150px;
+  background-color: white;
+}
+
+.comment-input textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+}
+
+.review-form button {
+  margin-top: 1rem;
+  padding: 0.5rem 1.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.review-form button:disabled {
+  background-color: #ccc;
+  border-color: #ccc;
+  cursor: not-allowed;
+}
+
+.alert-danger {
+  color: #721c24;
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
 } 

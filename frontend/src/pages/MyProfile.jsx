@@ -27,7 +27,8 @@ import {
   FaTruck,
   FaExchangeAlt,
   FaComment,
-  FaPhone
+  FaPhone,
+  FaMapMarkerAlt
 } from "react-icons/fa";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
@@ -41,14 +42,14 @@ const MyProfile = () => {
   const [orders, setOrders] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editForm, setEditForm] = useState({
-    username: "",
-    email: "",
-    phone: "",
-    address: ""
+  const [editingReview, setEditingReview] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    rating: 5,
+    comment: ''
   });
 
   // Fetch user data
@@ -95,7 +96,7 @@ const MyProfile = () => {
           
           console.log("MyProfile - Normalized user data:", normalizedUser);
           setUser(normalizedUser);
-          setEditForm({
+          setEditFormData({
             username: normalizedUser.username || "",
             email: normalizedUser.email || "",
             phone: normalizedUser.phone || "",
@@ -165,12 +166,12 @@ const MyProfile = () => {
       // Update user profile
       await axios.put(
         `http://localhost:8080/api/users/${user.id}`,
-        editForm,
+        editFormData,
         { withCredentials: true }
       );
 
       // Update local storage with new user data
-      const updatedUser = { ...user, ...editForm };
+      const updatedUser = { ...user, ...editFormData };
       localStorage.setItem("user", JSON.stringify(updatedUser));
       setUser(updatedUser);
 
@@ -184,7 +185,7 @@ const MyProfile = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setEditForm({ ...editForm, [name]: value });
+    setEditFormData({ ...editFormData, [name]: value });
   };
 
   const removeFromWishlist = async (productId) => {
@@ -195,6 +196,62 @@ const MyProfile = () => {
       );
     } catch (error) {
       console.error("Error removing from wishlist:", error);
+    }
+  };
+
+  const handleEditReview = (review) => {
+    setEditingReview(review);
+    setEditFormData({
+      rating: review.rating,
+      comment: review.comment
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateReview = async () => {
+    try {
+      const response = await axios.put(
+        `http://localhost:8080/api/reviews/${editingReview.reviewId}`,
+        {
+          ...editingReview,
+          rating: editFormData.rating,
+          comment: editFormData.comment
+        },
+        { withCredentials: true }
+      );
+
+      // Update the reviews list with the edited review
+      setReviews(prevReviews => 
+        prevReviews.map(review => 
+          review.reviewId === editingReview.reviewId ? response.data : review
+        )
+      );
+
+      setShowEditModal(false);
+      setEditingReview(null);
+      setEditFormData({ rating: 5, comment: '' });
+    } catch (error) {
+      console.error('Error updating review:', error);
+      alert('Failed to update review. Please try again.');
+    }
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    if (window.confirm('Are you sure you want to delete this review?')) {
+      try {
+        await axios.delete(
+          `http://localhost:8080/api/reviews/${reviewId}`,
+          { withCredentials: true }
+        );
+
+        // Remove the deleted review from the list
+        setReviews(prevReviews => 
+          prevReviews.filter(review => review.reviewId !== reviewId)
+        );
+      } catch (error) {
+        console.error('Error deleting review:', error);
+        alert('Failed to delete review. Please try again.');
+      }
     }
   };
 
@@ -575,7 +632,7 @@ const MyProfile = () => {
                     <ListGroup variant="flush" className="rounded-3">
                       {reviews.map((review) => (
                         <ListGroup.Item
-                          key={review.id}
+                          key={review.reviewId}
                           className="mb-3 border rounded-3 p-4 hover-shadow"
                         >
                           <div className="d-flex justify-content-between align-items-center mb-2">
@@ -587,10 +644,11 @@ const MyProfile = () => {
                                 {[...Array(5)].map((_, i) => (
                                   <FaStar
                                     key={i}
-                                    className={`me-1 ${i < review.rating
+                                    className={`me-1 ${
+                                      i < review.rating
                                         ? "text-warning"
                                         : "text-muted"
-                                      }`}
+                                    }`}
                                     style={{ fontSize: "1.2rem" }}
                                   />
                                 ))}
@@ -604,6 +662,7 @@ const MyProfile = () => {
                                 variant="outline-dark"
                                 size="sm"
                                 className="rounded-pill px-3"
+                                onClick={() => handleEditReview(review)}
                               >
                                 <FaEdit className="me-1" /> Edit
                               </Button>
@@ -611,6 +670,7 @@ const MyProfile = () => {
                                 variant="outline-danger"
                                 size="sm"
                                 className="rounded-pill px-3"
+                                onClick={() => handleDeleteReview(review.reviewId)}
                               >
                                 <FaTrash />
                               </Button>
@@ -651,74 +711,49 @@ const MyProfile = () => {
           </Row>
         </Tab.Container>
 
-        {/* EDIT PROFILE MODAL */}
-        <Modal show={showEditModal} onHide={() => setShowEditModal(false)} centered>
-          <Modal.Header closeButton className="border-0 pb-0">
-            <Modal.Title className="fw-bold text-dark">Edit Profile</Modal.Title>
+        {/* Edit Review Modal */}
+        <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Edit Review</Modal.Title>
           </Modal.Header>
-          <Modal.Body className="pt-0">
-            <Form onSubmit={handleEditProfile}>
+          <Modal.Body>
+            <Form>
               <Form.Group className="mb-3">
-                <Form.Label className="fw-medium">Username</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="username"
-                  value={editForm.username}
-                  onChange={handleInputChange}
-                  className="rounded-2 py-2"
-                  required
-                />
+                <Form.Label>Rating</Form.Label>
+                <Form.Select
+                  value={editFormData.rating}
+                  onChange={(e) => setEditFormData(prev => ({
+                    ...prev,
+                    rating: parseInt(e.target.value)
+                  }))}
+                >
+                  {[5, 4, 3, 2, 1].map(num => (
+                    <option key={num} value={num}>{num} Stars</option>
+                  ))}
+                </Form.Select>
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label className="fw-medium">Email</Form.Label>
-                <Form.Control
-                  type="email"
-                  name="email"
-                  value={editForm.email}
-                  onChange={handleInputChange}
-                  className="rounded-2 py-2"
-                  required
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label className="fw-medium">Phone</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="phone"
-                  value={editForm.phone}
-                  onChange={handleInputChange}
-                  className="rounded-2 py-2"
-                />
-              </Form.Group>
-              <Form.Group className="mb-4">
-                <Form.Label className="fw-medium">Address</Form.Label>
+                <Form.Label>Comment</Form.Label>
                 <Form.Control
                   as="textarea"
                   rows={3}
-                  name="address"
-                  value={editForm.address}
-                  onChange={handleInputChange}
-                  className="rounded-2 py-2"
+                  value={editFormData.comment}
+                  onChange={(e) => setEditFormData(prev => ({
+                    ...prev,
+                    comment: e.target.value
+                  }))}
                 />
               </Form.Group>
-              <div className="d-flex justify-content-end gap-2">
-                <Button
-                  variant="outline-secondary"
-                  className="rounded-pill px-4"
-                  onClick={() => setShowEditModal(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="dark"
-                  type="submit"
-                  className="rounded-pill px-4 fw-medium"
-                >
-                  Save Changes
-                </Button>
-              </div>
             </Form>
           </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleUpdateReview}>
+              Save Changes
+            </Button>
+          </Modal.Footer>
         </Modal>
       </Container>
     </>
