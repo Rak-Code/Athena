@@ -19,13 +19,22 @@ const Reviews = () => {
     try {
       setLoading(true);
       const response = await axios.get('http://localhost:8080/api/reviews', {
-        withCredentials: true
+        withCredentials: true,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
       });
+      
+      if (!response.data) {
+        throw new Error('No data received from server');
+      }
+      
       setReviews(response.data);
       setError(null);
     } catch (err) {
       console.error('Error fetching reviews:', err);
-      setError('Failed to load reviews. Please try again.');
+      setError(err.response?.data?.message || 'Failed to load reviews. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -35,12 +44,18 @@ const Reviews = () => {
     if (window.confirm('Are you sure you want to delete this review?')) {
       try {
         await axios.delete(`http://localhost:8080/api/reviews/${reviewId}`, {
-          withCredentials: true
+          withCredentials: true,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
         });
         setReviews(reviews.filter(review => review.reviewId !== reviewId));
+        // Show success message
+        alert('Review deleted successfully');
       } catch (err) {
         console.error('Error deleting review:', err);
-        alert('Failed to delete review. Please try again.');
+        alert(err.response?.data?.message || 'Failed to delete review. Please try again.');
       }
     }
   };

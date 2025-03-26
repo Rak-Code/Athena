@@ -14,6 +14,7 @@
     "axios": "^1.8.4",
     "bootstrap": "^5.3.3",
     "frontend": "file:",
+    "razorpay": "^2.9.6",
     "react": "^19.0.0",
     "react-bootstrap": "^2.10.9",
     "react-bootstrap-icons": "^1.11.5",
