@@ -1,7 +1,11 @@
+Below is an updated and comprehensive README.md that now includes the Chat Bot integration details:
 
+---
+
+```markdown
 # Athena E-Commerce Platform
 
-Athena is a full-stack e-commerce application built with a Spring Boot backend and a React frontend. It offers robust features for user management, order processing, payment integration, email notifications, and security configuration. This document covers every aspect of the project—from architecture and features to installation, configuration, troubleshooting, and future enhancements.
+Athena is a full-stack e-commerce application built with a Spring Boot backend and a React frontend. It offers robust features for user management, order processing, payment integration, email notifications, security configuration, and an integrated Chat Bot. This document covers every aspect of the project—from architecture and features to installation, configuration, troubleshooting, and future enhancements.
 
 ---
 
@@ -14,11 +18,13 @@ Athena is a full-stack e-commerce application built with a Spring Boot backend a
   - [Payment Integration](#payment-integration)
   - [Email Notifications](#email-notifications)
   - [Security](#security)
+  - [Chat Bot Integration](#chat-bot-integration)
 - [Architecture & Directory Structure](#architecture--directory-structure)
 - [API Documentation](#api-documentation)
   - [User Endpoints](#user-endpoints)
   - [Order Endpoints](#order-endpoints)
   - [Payment Endpoints](#payment-endpoints)
+  - [Chat Bot Endpoints](#chat-bot-endpoints)
 - [Installation Guide](#installation-guide)
   - [Prerequisites](#prerequisites)
   - [Backend Setup](#backend-setup)
@@ -35,7 +41,7 @@ Athena is a full-stack e-commerce application built with a Spring Boot backend a
 
 ## Project Overview
 
-Athena is designed to serve as a scalable and secure e-commerce solution. The backend is implemented using Spring Boot with RESTful APIs, while the frontend is developed with React to provide a dynamic user experience. The project integrates with Razorpay for payment processing and uses SMTP for email notifications. It also includes comprehensive logging, error handling, and security features to ensure a robust production-ready environment.
+Athena is designed to serve as a scalable and secure e-commerce solution. The backend is implemented using Spring Boot with RESTful APIs, while the frontend is developed with React to provide a dynamic user experience. The project integrates with Razorpay for payment processing, uses SMTP for email notifications, and now includes an intelligent Chat Bot to assist users with inquiries, product recommendations, and support. Comprehensive logging, error handling, and security features ensure a robust production-ready environment.
 
 ---
 
@@ -83,6 +89,20 @@ Athena is designed to serve as a scalable and secure e-commerce solution. The ba
 - **Additional Protections:**  
   - CSRF protection and input sanitization are in place.
 
+### Chat Bot Integration
+- **Overview:**  
+  - An intelligent Chat Bot is integrated to provide real-time assistance. Users can ask questions about products, orders, payment issues, and general site navigation.
+- **Backend Implementation:**  
+  - The Chat Bot functionality is implemented as a REST endpoint in the Spring Boot backend. It can use either a rule-based system or integrate with third-party NLP services for more advanced responses.
+- **Frontend Integration:**  
+  - The Chat Bot is embedded as a React component that can be accessed from any page. It features a user-friendly interface with real-time messaging.
+- **Features:**  
+  - Natural language understanding for common queries.
+  - Quick replies and suggestion buttons.
+  - Escalation to human support if necessary.
+- **API Endpoint:**  
+  - A dedicated endpoint (e.g., `/api/chat/send`) handles incoming messages and returns responses.
+
 ---
 
 ## Architecture & Directory Structure
@@ -94,11 +114,11 @@ The project is organized into two main parts: the backend and the frontend.
 backend/
 ├── src/main/java/com/athena
 │   ├── config/            # Security, CORS, and other configurations
-│   ├── controller/        # REST API controllers (UserController, OrderController, PaymentController, etc.)
+│   ├── controller/        # REST API controllers (UserController, OrderController, PaymentController, ChatController, etc.)
 │   ├── dto/               # Data Transfer Objects
 │   ├── model/             # JPA Entity Models (User, Order, Payment, etc.)
 │   ├── repository/        # Spring Data repositories for CRUD operations
-│   ├── services/          # Business logic and service layer (EmailService, OrderService, PaymentService, etc.)
+│   ├── services/          # Business logic and service layer (EmailService, OrderService, PaymentService, ChatBotService, etc.)
 │   └── utils/             # Helper classes and utilities
 └── src/main/resources/
     ├── application.properties  # Configuration settings
@@ -110,17 +130,17 @@ backend/
 frontend/
 ├── public/                   # Static files (HTML, images, etc.)
 └── src/
-    ├── components/           # Reusable React components
+    ├── components/           # Reusable React components (including ChatBotComponent)
     ├── pages/                # Page-level views and layouts
-    ├── services/             # API service calls
+    ├── services/             # API service calls (Chat service integration included)
     ├── utils/                # Helper functions and constants
     └── App.jsx               # Main application component
 ```
 
 ### Database
 - **MySQL:**  
-  - The relational database stores all application data such as users, orders, and payment records.
-  - Schema scripts can be found in the `/database` folder if applicable.
+  - The relational database stores all application data such as users, orders, payment records, and chat logs (if applicable).
+  - Schema scripts can be found in the `/database` folder if provided.
 
 ---
 
@@ -128,10 +148,10 @@ frontend/
 
 ### User Endpoints
 
-| Method | Path                    | Description                      | Example Payload                                                  |
-|--------|-------------------------|----------------------------------|------------------------------------------------------------------|
-| POST   | `/api/users/register`   | Register a new user              | `{ "email": "user@example.com", "password": "Password123" }`     |
-| POST   | `/api/users/login`      | Authenticate user and generate token | `{ "email": "user@example.com", "password": "Password123" }` |
+| Method | Path                     | Description                             | Example Payload                                                  |
+|--------|--------------------------|-----------------------------------------|------------------------------------------------------------------|
+| POST   | `/api/users/register`    | Register a new user                     | `{ "email": "user@example.com", "password": "Password123" }`     |
+| POST   | `/api/users/login`       | Authenticate user and generate token    | `{ "email": "user@example.com", "password": "Password123" }`     |
 
 ### Order Endpoints
 
@@ -147,7 +167,13 @@ frontend/
 |--------|-----------------------------------|---------------------------------------------------|---------------------------------------------------------------------------------|
 | POST   | `/api/payments/update`            | Update payment status (via Razorpay webhook)      | `{ "orderId": 1, "status": "Completed", "transactionId": "txn_12345" }`           |
 
-*Note: Additional endpoints for email notifications or user profile management can be added as required.*
+### Chat Bot Endpoints
+
+| Method | Path                   | Description                                    | Example Payload                                                   |
+|--------|------------------------|------------------------------------------------|-------------------------------------------------------------------|
+| POST   | `/api/chat/send`       | Send a chat message and receive a response     | `{ "message": "What are today's deals?" }`                        |
+
+*Note: The Chat Bot endpoint can be extended to support conversation history or additional functionalities as required.*
 
 ---
 
@@ -238,6 +264,8 @@ The application is highly configurable via the `application.properties` file (ba
   Configure SMTP settings for sending transactional emails.
 - **Payment Gateway:**  
   Razorpay API keys must be set for processing payments.
+- **Chat Bot Settings:**  
+  Optionally configure any third-party NLP or AI integration settings for the Chat Bot service.
 - **Logging Levels:**  
   Adjust logging levels to enable detailed debug information during development or troubleshooting.
 
@@ -266,6 +294,11 @@ The application is highly configurable via the `application.properties` file (ba
    - Confirm that CORS is properly configured in the Spring Boot security configuration.
    - Check the browser console for detailed error messages and adjust the allowed origins accordingly.
 
+5. **Chat Bot Issues:**
+   - Verify the Chat Bot service endpoint is correctly implemented and running.
+   - Check the integration settings if using external NLP services.
+   - Review network logs to ensure messages are correctly sent and responses received.
+
 ---
 
 ## Changelog
@@ -276,6 +309,7 @@ The application is highly configurable via the `application.properties` file (ba
 - **Payment Integration:** Integrated Razorpay with webhook support for payment status updates.
 - **Email Notifications:** Configured SMTP-based email notifications with error handling.
 - **Security Enhancements:** Set up CORS, BCrypt password encoding, and secure endpoints.
+- **Chat Bot Integration:** Implemented a Chat Bot REST endpoint and integrated the Chat Bot UI in the frontend.
 - **Logging:** Added detailed logging across controllers and services.
 
 *Future changes will be documented in subsequent version updates.*
@@ -290,6 +324,7 @@ The application is highly configurable via the `application.properties` file (ba
 - [ ] **Shipping Integration:** Support third-party shipping APIs.
 - [ ] **Product Reviews:** Enable customers to leave reviews and ratings.
 - [ ] **Multi-Payment Support:** Expand beyond Razorpay to include other payment gateways.
+- [ ] **Advanced Chat Bot:** Enhance Chat Bot capabilities with context-aware conversation and support for additional languages.
 
 ---
 
@@ -307,6 +342,4 @@ Contributions are welcome! Please follow these steps to contribute:
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
-
----
 
