@@ -1,8 +1,4 @@
-Below is a comprehensive README.md that covers all aspects of your Athena project. You can adjust or extend the sections as needed:
 
----
-
-```markdown
 # Athena E-Commerce Platform
 
 Athena is a full-stack e-commerce application built with a Spring Boot backend and a React frontend. It offers robust features for user management, order processing, payment integration, email notifications, and security configuration. This document covers every aspect of the project—from architecture and features to installation, configuration, troubleshooting, and future enhancements.
@@ -314,9 +310,3 @@ This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-*For further questions or support, please open an issue on the GitHub repository or contact the project maintainers.*
-```
-
----
-
-This README covers every major aspect of the Athena project—from an overview to setup, configuration, and future directions. Adjust paths, configuration values, and sections as required to match your actual project details.
