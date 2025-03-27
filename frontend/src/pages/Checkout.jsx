@@ -31,6 +31,8 @@ const Checkout = () => {
 
   const clearCart = () => cart.forEach(item => removeFromCart(item.productId));
 
+  // Handles Razorpay payment flow.
+  // On successful payment, backend will trigger email confirmation.
   const handlePayment = async (total, orderId) => {
     try {
       console.log("Creating Razorpay order for amount:", total);
@@ -58,8 +60,8 @@ const Checkout = () => {
       }
 
       const options = {
-        key: "rzp_test_w81KIiv8IbbUDv",
-        amount: response.data.amount, // Amount is now in paise from backend
+        key: "rzp_test_w81KIiv8IbbUDv", // Replace with your actual key if needed.
+        amount: response.data.amount, // Amount in paise from backend
         currency: "INR",
         name: "Athena Store",
         description: `Order #${orderId}`,
@@ -68,6 +70,7 @@ const Checkout = () => {
           try {
             console.log("Payment success response:", paymentResponse);
             
+            // Update payment status in backend. Email confirmation is sent automatically in PaymentService.
             const updateResponse = await axios.post(
               "http://localhost:8080/api/payments/update",
               {
@@ -114,13 +117,8 @@ const Checkout = () => {
         }
       };
 
-      try {
-        const razorpay = new window.Razorpay(options);
-        razorpay.open();
-      } catch (error) {
-        console.error("Error initializing Razorpay:", error);
-        throw new Error("Failed to initialize payment gateway. Please try again.");
-      }
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
     } catch (error) {
       console.error("Payment Error Details:", {
         message: error.message,
@@ -165,24 +163,24 @@ const Checkout = () => {
       const shipping = totalAmount > 500 ? 0 : 50;
       const total = totalAmount + tax + shipping;
 
-    const orderData = {
+      const orderData = {
         userId,
         customerName: formData.fullName || userData.username,
         email: formData.email || userData.email,
-      phone: formData.phone,
+        phone: formData.phone,
         shippingAddress: `${addressLine1}, ${city}, ${state}, ${postalCode}, ${country}`,
         billingAddress: `${addressLine1}, ${city}, ${state}, ${postalCode}, ${country}`,
         paymentMethod,
         totalAmount: total,
-      cartItems: cart.map(item => ({
+        cartItems: cart.map(item => ({
           productId: parseInt(item.productId),
-        name: item.name,
+          name: item.name,
           price: parseFloat(item.price),
           quantity: parseInt(item.quantity),
           variantSize: item.variantSize || null,
           variantColor: item.variantColor || null
-      }))
-    };
+        }))
+      };
 
       const response = await axios.post('http://localhost:8080/api/orders', orderData);
       const orderId = response.data.orderId || response.data.id;
@@ -190,7 +188,7 @@ const Checkout = () => {
       if (paymentMethod === "razorpay") {
         await handlePayment(total, orderId);
       } else {
-        // For COD orders
+        // For COD orders, email confirmation is sent via order placement flow on backend.
         clearCart();
         navigate(`/order-confirmation/${orderId}`, { 
           state: { 
@@ -234,32 +232,32 @@ const Checkout = () => {
               {["fullName", "email", "phone"].map(field => (
                 <div className="form-group" key={field}>
                   <label htmlFor={field}>{field.replace(/([A-Z])/g, ' $1').trim()}</label>
-                <input 
+                  <input 
                     type={field === 'email' ? 'email' : field === 'phone' ? 'tel' : 'text'}
                     id={field}
                     value={formData[field]}
                     onChange={(e) => setFormData({...formData, [field]: e.target.value})}
                     placeholder={`Enter your ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`}
-                  required 
-                />
+                    required 
+                  />
                 </div>
               ))}
-              </div>
-              
+            </div>
+            
             <div className="form-section">
               <h3>Shipping Address</h3>
               {["addressLine1", "city", "state", "postalCode"].map(field => (
                 <div className="form-group" key={field}>
                   <label htmlFor={field}>{field.replace(/([A-Z])/g, ' $1').trim()}</label>
-                <input 
+                  <input 
                     type="text"
                     id={field}
                     value={formData[field]}
                     onChange={(e) => setFormData({...formData, [field]: e.target.value})}
                     placeholder={`Enter your ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`}
-                  required 
-                />
-              </div>
+                    required 
+                  />
+                </div>
               ))}
               <div className="form-group">
                 <label htmlFor="country">Country</label>
@@ -279,30 +277,30 @@ const Checkout = () => {
                   { value: "cod", label: "Cash on Delivery", desc: "Pay when delivered" },
                   { value: "razorpay", label: "Razorpay", desc: "Secure online payments" }
                 ].map(method => (
-                <div 
+                  <div 
                     key={method.value}
-                  className="d-flex align-items-center p-3 mb-2 rounded" 
-                  style={{ 
+                    className="d-flex align-items-center p-3 mb-2 rounded" 
+                    style={{ 
                       backgroundColor: formData.paymentMethod === method.value ? "#f0f7ff" : "#f8f9fa",
                       border: `1px solid ${formData.paymentMethod === method.value ? "#cce5ff" : "#dee2e6"}`,
-                    cursor: "pointer"
-                  }}
+                      cursor: "pointer"
+                    }}
                     onClick={() => setFormData({...formData, paymentMethod: method.value})}
-                >
-                  <input 
-                    type="radio" 
+                  >
+                    <input 
+                      type="radio" 
                       id={method.value} 
-                    name="paymentMethod" 
+                      name="paymentMethod" 
                       value={method.value} 
                       checked={formData.paymentMethod === method.value} 
                       onChange={() => {}} 
-                    className="me-3"
+                      className="me-3"
                     />
                     <label htmlFor={method.value} className="mb-0 w-100">
                       <span className="fw-bold">{method.label}</span>
                       <p className="text-muted mb-0 small">{method.desc}</p>
-                  </label>
-                </div>
+                    </label>
+                  </div>
                 ))}
               </div>
             </div>
@@ -315,21 +313,21 @@ const Checkout = () => {
         
         <div className="order-summary">
           <h3>Order Summary</h3>
-              <div className="cart-items">
+          <div className="cart-items">
             {cart.map(item => (
               <div className="cart-item" key={`${item.productId}-${item.variantSize || 'no-size'}-${item.variantColor || 'no-color'}`}>
-                    <div className="item-details">
-                      <h4>{item.name}</h4>
-                      {item.variantSize && <p>Size: {item.variantSize}</p>}
-                      {item.variantColor && <p>Color: {item.variantColor}</p>}
-                      <p>Quantity: {item.quantity}</p>
-                    </div>
+                <div className="item-details">
+                  <h4>{item.name}</h4>
+                  {item.variantSize && <p>Size: {item.variantSize}</p>}
+                  {item.variantColor && <p>Color: {item.variantColor}</p>}
+                  <p>Quantity: {item.quantity}</p>
+                </div>
                 <div className="item-price">₹{(item.price * item.quantity).toFixed(2)}</div>
-                  </div>
-                ))}
               </div>
-              
-              <div className="summary-totals">
+            ))}
+          </div>
+          
+          <div className="summary-totals">
             {[
               { label: "Subtotal", value: totalAmount },
               { label: "Shipping", value: shipping, format: v => v === 0 ? "Free" : `₹${v.toFixed(2)}` },

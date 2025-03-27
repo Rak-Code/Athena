@@ -1,10 +1,13 @@
 package com.example.backend.services;
 
 import com.example.backend.model.Order;
+import com.example.backend.model.Payment;
 import com.example.backend.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,9 +17,27 @@ public class OrderService {
     @Autowired
     private OrderRepository orderRepository;
 
+    @Autowired
+    private PaymentService paymentService;
+
     // Create a new order
+    @Transactional
     public Order createOrder(Order order) {
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+        
+        // Create a payment record for the order
+        Payment payment = new Payment();
+        payment.setOrder(savedOrder);
+        payment.setPaymentMethod(savedOrder.getPaymentMethod());
+        payment.setAmount(savedOrder.getTotalAmount());
+        payment.setStatus(Payment.Status.PENDING);
+        payment.setEmail(savedOrder.getEmail());
+        payment.setTransactionId("TXN" + System.currentTimeMillis()); // Generate a transaction ID
+        
+        // Save the payment record
+        paymentService.createPayment(payment);
+        
+        return savedOrder;
     }
 
     // Get all orders
