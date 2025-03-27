@@ -1,11 +1,7 @@
-Below is an updated and comprehensive README.md that now includes the Chat Bot integration details:
 
----
-
-```markdown
 # Athena E-Commerce Platform
 
-Athena is a full-stack e-commerce application built with a Spring Boot backend and a React frontend. It offers robust features for user management, order processing, payment integration, email notifications, security configuration, and an integrated Chat Bot. This document covers every aspect of the project—from architecture and features to installation, configuration, troubleshooting, and future enhancements.
+Athena is a full-stack e-commerce application for clothing products built with a Spring Boot backend and a React frontend. It offers robust features for user management, order processing, payment integration, email notifications, security configuration, and an integrated Chat Bot. This document covers every aspect of the project—from architecture and features to installation, configuration, troubleshooting, and future enhancements.
 
 ---
 
