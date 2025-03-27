@@ -3,6 +3,8 @@ package com.example.backend.services;
 import com.example.backend.model.Order;
 import com.example.backend.model.Payment;
 import com.example.backend.repository.OrderRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +15,7 @@ import java.util.Optional;
 
 @Service
 public class OrderService {
+    private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
 
     @Autowired
     private OrderRepository orderRepository;
@@ -20,24 +23,47 @@ public class OrderService {
     @Autowired
     private PaymentService paymentService;
 
+    @Autowired
+    private EmailService emailService;
+
     // Create a new order
     @Transactional
     public Order createOrder(Order order) {
-        Order savedOrder = orderRepository.save(order);
-        
-        // Create a payment record for the order
-        Payment payment = new Payment();
-        payment.setOrder(savedOrder);
-        payment.setPaymentMethod(savedOrder.getPaymentMethod());
-        payment.setAmount(savedOrder.getTotalAmount());
-        payment.setStatus(Payment.Status.PENDING);
-        payment.setEmail(savedOrder.getEmail());
-        payment.setTransactionId("TXN" + System.currentTimeMillis()); // Generate a transaction ID
-        
-        // Save the payment record
-        paymentService.createPayment(payment);
-        
-        return savedOrder;
+        try {
+            logger.info("Creating new order for customer: {}", order.getCustomerName());
+            Order savedOrder = orderRepository.save(order);
+            
+            // Create a payment record for the order
+            Payment payment = new Payment();
+            payment.setOrder(savedOrder);
+            payment.setPaymentMethod(savedOrder.getPaymentMethod());
+            payment.setAmount(savedOrder.getTotalAmount());
+            payment.setStatus(Payment.Status.PENDING);
+            payment.setEmail(savedOrder.getEmail());
+            payment.setTransactionId("TXN" + System.currentTimeMillis()); // Generate a transaction ID
+            
+            // Save the payment record
+            paymentService.createPayment(payment);
+            
+            // Send order confirmation email
+            try {
+                logger.info("Sending order confirmation email for order ID: {}", savedOrder.getOrderId());
+                emailService.sendOrderConfirmation(
+                    savedOrder.getEmail(),
+                    savedOrder.getOrderId().toString(),
+                    savedOrder.getTotalAmount().doubleValue()
+                );
+            } catch (Exception e) {
+                logger.error("Failed to send order confirmation email", e);
+                // Don't throw the exception as we don't want to rollback the order creation
+                // just because email sending failed
+            }
+            
+            return savedOrder;
+        } catch (Exception e) {
+            logger.error("Error creating order", e);
+            throw e;
+        }
     }
 
     // Get all orders

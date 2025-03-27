@@ -2,7 +2,6 @@ package com.example.backend.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import java.math.BigDecimal;
