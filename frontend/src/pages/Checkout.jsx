@@ -60,7 +60,7 @@ const Checkout = () => {
       }
 
       const options = {
-        key: "rzp_test_w81KIiv8IbbUDv", // Replace with your actual key if needed.
+        key: "${razorpay.key_id}", // Replace with your actual key if needed.
         amount: response.data.amount, // Amount in paise from backend
         currency: "INR",
         name: "Athena Store",
