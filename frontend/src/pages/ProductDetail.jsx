@@ -5,7 +5,9 @@ import Footer from "../components/Footer";
 import { FaHeart } from "react-icons/fa";
 import { useWishlist } from "../context/WishlistContext";
 import ReviewsSection from "../components/ReviewsSection";
+
 import DiscountBanner from "../components/DiscountBanner";
+import RecommendedProducts from "../components/RecommendedProducts";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -24,6 +26,19 @@ const ProductDetail = () => {
   const [couponApplied, setCouponApplied] = useState(false);
 
   useEffect(() => {
+    // Scroll to top on product change
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    // Reset state on product change
+    setProduct(null);
+    setSelectedSize("");
+    setQuantity(1);
+    setMessage("");
+    setDiscount(0);
+    setCouponCode("");
+    setCouponApplied(false);
+    setLoading(true);
+
     if (!id) {
       console.error("Product ID is undefined in URL");
       setLoading(false);
@@ -181,140 +196,148 @@ const ProductDetail = () => {
       </div>
 
       {product ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mb-12">
-          {/* Product Image */}
-          <div className="flex justify-center">
-            <div className="relative w-full max-w-md">
-              <img
-                src={product.imageUrl}
-                alt={product.name}
-                className="w-full rounded-xl shadow-lg object-cover transform transition-transform duration-300 hover:scale-105"
-              />
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/10 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
-            </div>
-          </div>
-
-          {/* Product Info */}
-          <div className="flex flex-col gap-6">
-            <h1 className="text-4xl font-bold text-gray-800">{product.name}</h1>
-            <p className="text-3xl font-semibold text-gray-900">
-              ₹{(product.price - discount).toFixed(2)}
-            </p>
-
-            {/* Coupon Code Input */}
-            <div className="mb-4">
-              <label htmlFor="couponCode" className="block text-gray-700 text-sm font-bold mb-2">
-                Coupon Code:
-              </label>
-              <div className="flex">
-                <input
-                  type="text"
-                  id="couponCode"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  placeholder="Enter coupon code"
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value)}
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mb-12">
+            {/* Product Image */}
+            <div className="flex justify-center">
+              <div className="relative w-full max-w-md">
+                <img
+                  src={product.imageUrl}
+                  alt={product.name}
+                  className="w-full rounded-xl shadow-lg object-cover transform transition-transform duration-300 hover:scale-105"
                 />
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/10 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+              </div>
+            </div>
+
+            {/* Product Info */}
+            <div className="flex flex-col gap-6">
+              <h1 className="text-4xl font-bold text-gray-800">{product.name}</h1>
+              <p className="text-3xl font-semibold text-gray-900">
+                ₹{(product.price - discount).toFixed(2)}
+              </p>
+
+              {/* Coupon Code Input */}
+              <div className="mb-4">
+                <label htmlFor="couponCode" className="block text-gray-700 text-sm font-bold mb-2">
+                  Coupon Code:
+                </label>
+                <div className="flex">
+                  <input
+                    type="text"
+                    id="couponCode"
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    placeholder="Enter coupon code"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                  />
+                  <button
+                    className="ml-2 px-4 py-2 font-bold text-sm text-white bg-blue-500 hover:bg-blue-700 rounded focus:outline-none focus:shadow-outline"
+                    type="button"
+                    onClick={handleApplyCoupon}
+                  >
+                    Apply
+                  </button>
+                </div>
+                {/* Show a green success message below coupon button if coupon applied */}
+                {couponApplied && (
+                  <p className="text-green-600 mt-2">{message}</p>
+                )}
+              </div>
+
+              <p className="text-gray-600 text-lg leading-relaxed">{product.description}</p>
+
+              {/* Size Selection */}
+              <div className="mb-6">
+                <label className="block text-gray-700 font-medium mb-2 text-lg">Size:</label>
+                <div className="flex gap-3">
+                  {["S", "M", "L", "XL"].map((size) => (
+                    <button
+                      key={size}
+                      className={`px-4 py-2 border rounded-full text-sm font-medium transition-all duration-300
+                        ${
+                          selectedSize === size
+                            ? "bg-blue-600 text-white border-blue-600 shadow-md"
+                            : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100 hover:border-gray-400"
+                        } focus:outline-none focus:ring-2 focus:ring-blue-300 active:scale-95`}
+                      onClick={() => setSelectedSize(size)}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quantity Selection */}
+              <div className="mb-6">
+                <label className="block text-gray-700 font-medium mb-2 text-lg">Quantity:</label>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setQuantity(quantity > 1 ? quantity - 1 : 1)}
+                    className="px-3 py-1 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-all duration-300"
+                  >
+                    -
+                  </button>
+                  <span className="px-4 py-1 border border-gray-300 rounded-lg text-gray-700">
+                    {quantity}
+                  </span>
+                  <button
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="px-3 py-1 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-all duration-300"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-4 mb-6">
                 <button
-                  className="ml-2 px-4 py-2 font-bold text-sm text-white bg-blue-500 hover:bg-blue-700 rounded focus:outline-none focus:shadow-outline"
-                  type="button"
-                  onClick={handleApplyCoupon}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-pill text-sm font-semibold transition-all duration-300 shadow-md
+                    ${
+                      inWishlist
+                        ? "bg-red-500 text-white hover:bg-red-600"
+                        : "bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200"
+                    } ${addingToWishlist ? "opacity-50 cursor-not-allowed" : ""}`}
+                  onClick={handleWishlist}
+                  disabled={addingToWishlist}
                 >
-                  Apply
+                  <FaHeart className="text-lg" />
+                  {inWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
+                </button>
+
+                <button
+                  className={`flex-1 px-6 py-3 rounded-pill text-sm font-semibold bg-dark text-white hover:bg-gray-800 transition-all duration-300 shadow-md
+                    ${addingToCart ? "opacity-50 cursor-not-allowed" : ""}`}
+                  onClick={handleAddToCart}
+                  disabled={addingToCart}
+                >
+                  {addingToCart ? "Adding..." : "Add to Cart"}
                 </button>
               </div>
-              {/* Show a green success message below coupon button if coupon applied */}
-              {couponApplied && (
-                <p className="text-green-600 mt-2">{message}</p>
+
+              {/* General Feedback Message (e.g., wishlist/cart) */}
+              {message && !message.includes("Coupon") && (
+                <p
+                  className={`text-center py-2 px-4 rounded-pill text-sm font-medium
+                    ${
+                      message.includes("Added") || message.includes("Removed")
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                >
+                  {message}
+                </p>
               )}
             </div>
-
-            <p className="text-gray-600 text-lg leading-relaxed">{product.description}</p>
-
-            {/* Size Selection */}
-            <div className="mb-6">
-              <label className="block text-gray-700 font-medium mb-2 text-lg">Size:</label>
-              <div className="flex gap-3">
-                {["S", "M", "L", "XL"].map((size) => (
-                  <button
-                    key={size}
-                    className={`px-4 py-2 border rounded-full text-sm font-medium transition-all duration-300
-                      ${
-                        selectedSize === size
-                          ? "bg-blue-600 text-white border-blue-600 shadow-md"
-                          : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100 hover:border-gray-400"
-                      } focus:outline-none focus:ring-2 focus:ring-blue-300 active:scale-95`}
-                    onClick={() => setSelectedSize(size)}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Quantity Selection */}
-            <div className="mb-6">
-              <label className="block text-gray-700 font-medium mb-2 text-lg">Quantity:</label>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setQuantity(quantity > 1 ? quantity - 1 : 1)}
-                  className="px-3 py-1 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-all duration-300"
-                >
-                  -
-                </button>
-                <span className="px-4 py-1 border border-gray-300 rounded-lg text-gray-700">
-                  {quantity}
-                </span>
-                <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="px-3 py-1 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-all duration-300"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
-            {/* Buttons */}
-            <div className="flex gap-4 mb-6">
-              <button
-                className={`flex items-center gap-2 px-6 py-3 rounded-pill text-sm font-semibold transition-all duration-300 shadow-md
-                  ${
-                    inWishlist
-                      ? "bg-red-500 text-white hover:bg-red-600"
-                      : "bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200"
-                  } ${addingToWishlist ? "opacity-50 cursor-not-allowed" : ""}`}
-                onClick={handleWishlist}
-                disabled={addingToWishlist}
-              >
-                <FaHeart className="text-lg" />
-                {inWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
-              </button>
-
-              <button
-                className={`flex-1 px-6 py-3 rounded-pill text-sm font-semibold bg-dark text-white hover:bg-gray-800 transition-all duration-300 shadow-md
-                  ${addingToCart ? "opacity-50 cursor-not-allowed" : ""}`}
-                onClick={handleAddToCart}
-                disabled={addingToCart}
-              >
-                {addingToCart ? "Adding..." : "Add to Cart"}
-              </button>
-            </div>
-
-            {/* General Feedback Message (e.g., wishlist/cart) */}
-            {message && !message.includes("Coupon") && (
-              <p
-                className={`text-center py-2 px-4 rounded-pill text-sm font-medium
-                  ${
-                    message.includes("Added") || message.includes("Removed")
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
-              >
-                {message}
-              </p>
-            )}
           </div>
-        </div>
+
+          {/* Recommended Products Section */}
+          <RecommendedProducts
+            categoryId={product.categoryId || (product.category && product.category.id)}
+            currentProductId={product.productId || product.id}
+          />
+        </>
       ) : (
         <p className="text-center text-red-500 text-lg">Product not found!</p>
       )}
