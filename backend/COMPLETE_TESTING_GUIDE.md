@@ -1030,111 +1030,478 @@ Content-Type: application/json
 
 ---
 
-### Phase 5: Order Creation and Management
+## Phase 5: Order Creation and Management
 
-#### 5.1 Create Order
-**Purpose:** Place an order with cart items
+### TEST CASE 5.1: Create Order from Cart
+**Objective:** Convert cart items into formal order with complete customer information
+**Business Logic:** Creates order record, order details, and updates inventory
+**Prerequisites:** Valid userId, cart items, and address information
 
-**Endpoint:** `POST /api/orders`
+**HTTP Method:** `POST`
+**Endpoint:** `/api/orders`
+**Authorization:** Session-based (authenticated user required)
+
+**Request Headers:**
+```
+Content-Type: application/json
+```
 
 **Request Body:**
 ```json
 {
     "userId": 1,
     "customerName": "Test User",
-    "email": "testuser@example.com",
-    "phone": "+1234567890",
-    "shippingAddress": "123 Main Street, New York, NY 10001",
-    "billingAddress": "123 Main Street, New York, NY 10001",
+    "email": "testuser001@example.com",
+    "phone": "+1-555-123-4567",
+    "shippingAddress": "123 Technology Boulevard, San Francisco, CA 94105",
+    "billingAddress": "456 Financial District, New York, NY 10004",
     "paymentMethod": "card",
     "cartItems": [
         {
             "productId": 1,
-            "quantity": 2,
-            "price": 999.99
+            "quantity": 4,
+            "price": 1199.99
         },
         {
             "productId": 2,
-            "quantity": 1,
-            "price": 899.99
+            "quantity": 3,
+            "price": 29.99
         }
     ]
 }
 ```
 
-**Expected Response (200 OK):**
+**Expected Response (HTTP 200):**
 ```json
 {
     "orderId": 1,
     "status": "PENDING",
-    "totalAmount": 2899.97,
+    "totalAmount": 4889.93,
     "orderDate": "2024-01-15T10:30:00",
     "orderItems": [
         {
             "orderDetailId": 1,
             "productId": 1,
-            "name": "iPhone 15",
-            "quantity": 2,
-            "price": 999.99
+            "name": "iPhone 15 Pro Max",
+            "quantity": 4,
+            "price": 1199.99
         },
         {
             "orderDetailId": 2,
             "productId": 2,
-            "name": "Samsung Galaxy S24",
-            "quantity": 1,
-            "price": 899.99
+            "name": "Premium Cotton T-Shirt",
+            "quantity": 3,
+            "price": 29.99
         }
     ]
 }
 ```
 
-**Save for later:** Note the `orderId` and `totalAmount`.
+**Critical Test Data:**
+- **Save orderId:** `1` (Required for payment, status updates, order tracking)
+- **Save orderDetailIds:** `1, 2` (Required for individual item operations)
+- **Total Calculation:** (4 × $1199.99) + (3 × $29.99) = $4889.93
+
+**Business Logic Validations:**
+- **Stock Deduction:** Product stockQuantity should decrease by ordered amounts
+- **Order Status:** Initializes to PENDING status
+- **Customer Data:** All contact information validated and stored
+- **Address Validation:** Complete shipping address required
+
+**Data Integrity Constraints:**
+- **User Association:** Order linked to authenticated user
+- **Product Validation:** All productIds must exist and be available
+- **Price Consistency:** Prices should match current product prices
+- **Quantity Validation:** Cannot exceed available stock
+
+**Required Field Validations:**
+- customerName: Required, non-empty
+- email: Required, valid email format
+- phone: Required, valid phone format
+- shippingAddress: Required, complete address
+- cartItems: Required, non-empty array
 
 ---
 
-#### 5.2 Get Order Details
-**Purpose:** Retrieve specific order information
+### TEST CASE 5.2: Get Order by ID
+**Objective:** Retrieve complete order information including items and customer details
+**Business Logic:** Returns order with related data (customer, items, payments)
+**Prerequisites:** Valid orderId from TEST CASE 5.1
 
-**Endpoint:** `GET /api/orders/1`
+**HTTP Method:** `GET`
+**Endpoint:** `/api/orders/1`
+**Authorization:** Session-based (user can access own orders)
 
-**Expected Response:** Complete order details with items.
-
----
-
-#### 5.3 Get Orders by User
-**Purpose:** Get all orders for a specific user
-
-**Endpoint:** `GET /api/orders/user/1`
-
-**Expected Response:** Array of all orders for the user.
-
----
-
-### Phase 6: Payment Processing
-
-#### 6.1 Create Razorpay Order
-**Purpose:** Generate payment order with Razorpay
-
-**Endpoint:** `POST /api/payments/create-order?amount=2899.97`
-
-**Expected Response (200 OK):**
+**Expected Response (HTTP 200):**
 ```json
 {
-    "id": "order_razorpay_id_12345",
-    "amount": 289997,
+    "orderId": 1,
+    "user": {
+        "userId": 1,
+        "username": "testuser001",
+        "email": "testuser001@example.com"
+    },
+    "customerName": "Test User",
+    "email": "testuser001@example.com",
+    "phone": "+1-555-123-4567",
+    "totalAmount": 4889.93,
+    "status": "PENDING",
+    "orderDate": "2024-01-15T10:30:00",
+    "shippingAddress": "123 Technology Boulevard, San Francisco, CA 94105",
+    "billingAddress": "456 Financial District, New York, NY 10004",
+    "paymentMethod": "card",
+    "orderDetails": [
+        {
+            "orderDetailId": 1,
+            "product": {
+                "productId": 1,
+                "name": "iPhone 15 Pro Max",
+                "price": 1199.99
+            },
+            "quantity": 4,
+            "price": 1199.99
+        },
+        {
+            "orderDetailId": 2,
+            "product": {
+                "productId": 2,
+                "name": "Premium Cotton T-Shirt",
+                "price": 29.99
+            },
+            "quantity": 3,
+            "price": 29.99
+        }
+    ]
+}
+```
+
+**Security Validation:**
+- **Authorization:** User can only access their own orders
+- **Data Privacy:** Other users' orders should return 404 or 403
+
+---
+
+### TEST CASE 5.3: Get Orders by User ID
+**Objective:** Retrieve all orders for specific user (order history)
+**Business Logic:** Returns user's complete order history with summary information
+**Prerequisites:** Valid userId and existing orders
+
+**HTTP Method:** `GET`
+**Endpoint:** `/api/orders/user/1`
+**Authorization:** Session-based (user accessing own order history)
+
+**Expected Response (HTTP 200):**
+```json
+[
+    {
+        "orderId": 1,
+        "customerName": "Test User",
+        "totalAmount": 4889.93,
+        "status": "PENDING",
+        "orderDate": "2024-01-15T10:30:00",
+        "paymentMethod": "card"
+    }
+]
+```
+
+---
+
+### TEST CASE 5.4: Get All Orders (Admin Function)
+**Objective:** Administrative view of all orders in system
+**Business Logic:** Returns all orders for management purposes
+**Prerequisites:** Admin privileges (implementation may vary)
+
+**HTTP Method:** `GET`
+**Endpoint:** `/api/orders`
+**Authorization:** Session-based (admin access required)
+
+**Expected Response (HTTP 200):**
+```json
+[
+    {
+        "orderId": 1,
+        "user": {
+            "userId": 1,
+            "username": "testuser001"
+        },
+        "customerName": "Test User",
+        "totalAmount": 4889.93,
+        "status": "PENDING",
+        "orderDate": "2024-01-15T10:30:00",
+        "paymentMethod": "card"
+    }
+]
+```
+
+**Administrative Features:**
+- **Order Management:** View all customer orders
+- **Status Monitoring:** Track order fulfillment pipeline
+- **Revenue Tracking:** Monitor total order values
+
+---
+
+### TEST CASE 5.5: Order Creation (Negative Flow - Invalid Product)
+**Objective:** Validate product existence during order creation
+**Business Logic:** System should reject orders with non-existent products
+
+**HTTP Method:** `POST`
+**Endpoint:** `/api/orders`
+
+**Request Body:**
+```json
+{
+    "userId": 1,
+    "customerName": "Test User",
+    "email": "testuser001@example.com",
+    "phone": "+1-555-123-4567",
+    "shippingAddress": "123 Technology Boulevard, San Francisco, CA 94105",
+    "paymentMethod": "card",
+    "cartItems": [
+        {
+            "productId": 999,
+            "quantity": 1,
+            "price": 100.00
+        }
+    ]
+}
+```
+
+**Expected Response (HTTP 400):**
+```json
+{
+    "error": "Product not found with ID: 999"
+}
+```
+
+---
+
+### TEST CASE 5.6: Order Creation (Negative Flow - Insufficient Stock)
+**Objective:** Validate stock availability during order creation
+**Business Logic:** System should reject orders exceeding available inventory
+
+**HTTP Method:** `POST`
+**Endpoint:** `/api/orders`
+
+**Request Body:**
+```json
+{
+    "userId": 1,
+    "customerName": "Test User",
+    "email": "testuser001@example.com",
+    "phone": "+1-555-123-4567",
+    "shippingAddress": "123 Technology Boulevard, San Francisco, CA 94105",
+    "paymentMethod": "card",
+    "cartItems": [
+        {
+            "productId": 1,
+            "quantity": 1000,
+            "price": 1199.99
+        }
+    ]
+}
+```
+
+**Expected Response (HTTP 400):**
+```json
+{
+    "error": "Insufficient stock for product: iPhone 15 Pro Max",
+    "availableStock": 46,
+    "requestedQuantity": 1000
+}
+```
+
+**Note:** Available stock should be 46 (50 - 4 from previous order)
+
+---
+
+## Phase 6: Order Status Management
+
+### TEST CASE 6.1: Update Order Status to PROCESSING
+**Objective:** Advance order through fulfillment pipeline
+**Business Logic:** Changes order status from PENDING to PROCESSING
+**Prerequisites:** Valid orderId in PENDING status
+
+**HTTP Method:** `PUT`
+**Endpoint:** `/api/orders/1/status?status=PROCESSING`
+**Authorization:** Session-based (admin or order owner)
+
+**Query Parameters:**
+- status: PROCESSING (Order.Status enum value)
+
+**Expected Response (HTTP 200):**
+```json
+{
+    "orderId": 1,
+    "status": "PROCESSING",
+    "totalAmount": 4889.93,
+    "orderDate": "2024-01-15T10:30:00",
+    "statusUpdateDate": "2024-01-15T11:00:00",
+    "customerName": "Test User"
+}
+```
+
+**Status Transition Rules:**
+- **Valid Transitions:** PENDING → PROCESSING → SHIPPED → DELIVERED
+- **Invalid Transitions:** Cannot skip states or go backwards
+- **Business Logic:** PROCESSING indicates order is being prepared
+
+---
+
+### TEST CASE 6.2: Update Order Status to SHIPPED
+**Objective:** Mark order as shipped for delivery tracking
+**Prerequisites:** Order in PROCESSING status
+
+**HTTP Method:** `PUT`
+**Endpoint:** `/api/orders/1/status?status=SHIPPED`
+**Authorization:** Session-based
+
+**Expected Response (HTTP 200):**
+```json
+{
+    "orderId": 1,
+    "status": "SHIPPED",
+    "totalAmount": 4889.93,
+    "orderDate": "2024-01-15T10:30:00",
+    "statusUpdateDate": "2024-01-15T12:00:00",
+    "customerName": "Test User"
+}
+```
+
+**Business Integration:**
+- **Shipping Notifications:** Email sent to customer
+- **Tracking Information:** Shipping carrier data integration
+- **Inventory Finalization:** Stock permanently reduced
+
+---
+
+### TEST CASE 6.3: Update Order Status to DELIVERED
+**Objective:** Complete order fulfillment lifecycle
+**Prerequisites:** Order in SHIPPED status
+
+**HTTP Method:** `PUT`
+**Endpoint:** `/api/orders/1/status?status=DELIVERED`
+**Authorization:** Session-based
+
+**Expected Response (HTTP 200):**
+```json
+{
+    "orderId": 1,
+    "status": "DELIVERED",
+    "totalAmount": 4889.93,
+    "orderDate": "2024-01-15T10:30:00",
+    "deliveryDate": "2024-01-17T14:30:00",
+    "customerName": "Test User"
+}
+```
+
+**Order Completion:**
+- **Final Status:** DELIVERED is terminal status
+- **Customer Communication:** Delivery confirmation email
+- **Review Eligibility:** Customer can now review products
+
+---
+
+### TEST CASE 6.4: Invalid Status Transition (Negative Flow)
+**Objective:** Validate status transition business rules
+**Business Logic:** System should reject invalid status changes
+
+**HTTP Method:** `PUT`
+**Endpoint:** `/api/orders/1/status?status=PENDING`
+
+**Expected Response (HTTP 400):**
+```json
+{
+    "error": "Invalid status transition from DELIVERED to PENDING"
+}
+```
+
+---
+
+### TEST CASE 6.5: Get Orders by Status
+**Objective:** Filter orders by current status for management dashboard
+**Business Logic:** Administrative function for order pipeline monitoring
+
+**HTTP Method:** `GET`
+**Endpoint:** `/api/orders/status/DELIVERED`
+**Authorization:** Session-based (admin privileges)
+
+**Expected Response (HTTP 200):**
+```json
+[
+    {
+        "orderId": 1,
+        "customerName": "Test User",
+        "totalAmount": 4889.93,
+        "status": "DELIVERED",
+        "orderDate": "2024-01-15T10:30:00",
+        "deliveryDate": "2024-01-17T14:30:00"
+    }
+]
+```
+
+**Status Filter Options:**
+- PENDING: New orders awaiting processing
+- PROCESSING: Orders being prepared
+- SHIPPED: Orders in transit
+- DELIVERED: Completed orders
+- CANCELLED: Cancelled orders
+
+---
+
+## Phase 7: Payment Processing
+
+### TEST CASE 7.1: Create Razorpay Payment Order
+**Objective:** Generate Razorpay order for payment gateway integration
+**Business Logic:** Creates payment order with amount in paise (1 INR = 100 paise)
+**Prerequisites:** Valid order total amount and Razorpay API configuration
+
+**HTTP Method:** `POST`
+**Endpoint:** `/api/payments/create-order?amount=4889.93`
+**Authorization:** Session-based (authenticated user required)
+
+**Query Parameters:**
+- amount: 4889.93 (Amount in INR, will be converted to paise)
+
+**Expected Response (HTTP 200):**
+```json
+{
+    "id": "order_razorpay_order_12345",
+    "amount": 488993,
     "currency": "INR",
     "receipt": "order_1642234200000"
 }
 ```
 
-**Save for later:** Note the Razorpay `id` for payment processing.
+**Critical Test Data:**
+- **Save Razorpay Order ID:** `order_razorpay_order_12345`
+- **Amount Conversion:** $4889.93 → 488993 paise
+- **Receipt Generation:** Unique timestamp-based receipt
+
+**Integration Requirements:**
+- **Razorpay Configuration:** API keys must be configured in application.properties
+- **Currency:** Fixed to INR for Indian payment processing
+- **Amount Validation:** Must match order total amount
+
+**Error Scenarios:**
+- Missing Razorpay API keys → HTTP 400
+- Invalid amount format → HTTP 400
+- Razorpay service unavailable → HTTP 500
 
 ---
 
-#### 6.2 Create Payment Record
-**Purpose:** Record payment details in the system
+### TEST CASE 7.2: Create Payment Record
+**Objective:** Record payment details in system database
+**Business Logic:** Links payment to order and tracks transaction status
+**Prerequisites:** Valid orderId and payment gateway response
 
-**Endpoint:** `POST /api/payments`
+**HTTP Method:** `POST`
+**Endpoint:** `/api/payments`
+**Authorization:** Session-based
+
+**Request Headers:**
+```
+Content-Type: application/json
+```
 
 **Request Body:**
 ```json
@@ -1142,99 +1509,222 @@ Content-Type: application/json
     "order": {
         "orderId": 1
     },
-    "amount": 2899.97,
+    "amount": 4889.93,
     "paymentMethod": "card",
     "status": "PENDING",
-    "transactionId": "pay_razorpay_payment_id_67890"
+    "transactionId": "pay_razorpay_payment_67890"
 }
 ```
 
-**Expected Response (200 OK):**
+**Expected Response (HTTP 200):**
 ```json
 {
     "paymentId": 1,
-    "amount": 2899.97,
+    "order": {
+        "orderId": 1
+    },
+    "amount": 4889.93,
     "paymentMethod": "card",
     "status": "PENDING",
-    "transactionId": "pay_razorpay_payment_id_67890",
-    "paymentDate": "2024-01-15T10:35:00"
+    "transactionId": "pay_razorpay_payment_67890",
+    "paymentDate": "2024-01-15T11:00:00"
 }
 ```
 
+**Critical Test Data:**
+- **Save paymentId:** `1` (Required for payment updates)
+- **Transaction Tracking:** Links to Razorpay transaction ID
+- **Email Notification:** System sends payment confirmation email
+
+**Payment Method Options:**
+- card: Credit/Debit card payments
+- netbanking: Internet banking
+- upi: UPI payments
+- wallet: Digital wallet payments
+- cod: Cash on delivery
+
+**Status Lifecycle:**
+- PENDING: Payment initiated
+- PROCESSING: Payment being processed
+- COMPLETED: Payment successful
+- FAILED: Payment failed
+- REFUNDED: Payment refunded
+
 ---
 
-#### 6.3 Update Payment Status
-**Purpose:** Mark payment as completed
+### TEST CASE 7.3: Update Payment Status to COMPLETED
+**Objective:** Mark payment as successfully completed
+**Business Logic:** Updates payment status and triggers order processing
+**Prerequisites:** Valid paymentId in PENDING status
 
-**Endpoint:** `PUT /api/payments/1/status?status=COMPLETED`
+**HTTP Method:** `PUT`
+**Endpoint:** `/api/payments/1/status?status=COMPLETED`
+**Authorization:** Session-based
 
-**Expected Response:** Updated payment with COMPLETED status.
+**Query Parameters:**
+- status: COMPLETED (Payment.Status enum value)
+
+**Expected Response (HTTP 200):**
+```json
+{
+    "paymentId": 1,
+    "order": {
+        "orderId": 1
+    },
+    "amount": 4889.93,
+    "paymentMethod": "card",
+    "status": "COMPLETED",
+    "transactionId": "pay_razorpay_payment_67890",
+    "paymentDate": "2024-01-15T11:00:00",
+    "completionDate": "2024-01-15T11:05:00"
+}
+```
+
+**Business Integration:**
+- **Email Notification:** Payment success email sent to customer
+- **Order Status:** May trigger order status update to PROCESSING
+- **Inventory Management:** Confirms product allocation
 
 ---
 
-#### 6.4 Update Payment via Webhook
-**Purpose:** Process Razorpay payment callback
+### TEST CASE 7.4: Razorpay Webhook Payment Update
+**Objective:** Process payment callback from Razorpay gateway
+**Business Logic:** Updates payment status based on gateway response
+**Prerequisites:** Valid order and payment IDs
 
-**Endpoint:** `POST /api/payments/update`
+**HTTP Method:** `POST`
+**Endpoint:** `/api/payments/update`
+**Authorization:** Webhook (may use different authentication)
+
+**Request Headers:**
+```
+Content-Type: application/json
+```
 
 **Request Body:**
 ```json
 {
     "orderId": "1",
-    "paymentId": "pay_razorpay_payment_id_67890",
-    "razorpayOrderId": "order_razorpay_id_12345",
+    "paymentId": "pay_razorpay_payment_67890",
+    "razorpayOrderId": "order_razorpay_order_12345",
     "status": "COMPLETED",
-    "amount": "2899.97"
+    "amount": "4889.93"
 }
 ```
 
-**Expected Response (200 OK):**
+**Expected Response (HTTP 200):**
 ```json
 {
     "status": "success",
     "orderId": "1",
-    "paymentId": "pay_razorpay_payment_id_67890",
+    "paymentId": "pay_razorpay_payment_67890",
     "message": "Payment updated successfully"
 }
 ```
 
----
-
-### Phase 7: Order Status Management
-
-#### 7.1 Update Order Status to Processing
-**Purpose:** Move order to processing state
-
-**Endpoint:** `PUT /api/orders/1/status?status=PROCESSING`
-
-**Expected Response:** Updated order with PROCESSING status.
+**Webhook Security:**
+- **Signature Verification:** Validate Razorpay webhook signature
+- **Idempotency:** Handle duplicate webhook calls
+- **Error Handling:** Graceful failure for invalid webhooks
 
 ---
 
-#### 7.2 Update Order Status to Shipped
-**Purpose:** Mark order as shipped
+### TEST CASE 7.5: Get Payment by Order ID
+**Objective:** Retrieve payment information for specific order
+**Business Logic:** Links payment data to order for customer reference
+**Prerequisites:** Valid orderId with associated payments
 
-**Endpoint:** `PUT /api/orders/1/status?status=SHIPPED`
+**HTTP Method:** `GET`
+**Endpoint:** `/api/payments/order/1`
+**Authorization:** Session-based (user can access own order payments)
 
-**Expected Response:** Updated order with SHIPPED status.
+**Expected Response (HTTP 200):**
+```json
+[
+    {
+        "paymentId": 1,
+        "amount": 4889.93,
+        "paymentMethod": "card",
+        "status": "COMPLETED",
+        "transactionId": "pay_razorpay_payment_67890",
+        "paymentDate": "2024-01-15T11:00:00",
+        "completionDate": "2024-01-15T11:05:00"
+    }
+]
+```
 
 ---
 
-#### 7.3 Update Order Status to Delivered
-**Purpose:** Complete the order lifecycle
+### TEST CASE 7.6: Get Payments by Status
+**Objective:** Administrative view of payments by status
+**Business Logic:** Monitor payment pipeline for financial reconciliation
+**Prerequisites:** Admin privileges
 
-**Endpoint:** `PUT /api/orders/1/status?status=DELIVERED`
+**HTTP Method:** `GET`
+**Endpoint:** `/api/payments/status/COMPLETED`
+**Authorization:** Session-based (admin access)
 
-**Expected Response:** Updated order with DELIVERED status.
+**Expected Response (HTTP 200):**
+```json
+[
+    {
+        "paymentId": 1,
+        "order": {
+            "orderId": 1,
+            "customerName": "Test User"
+        },
+        "amount": 4889.93,
+        "paymentMethod": "card",
+        "status": "COMPLETED",
+        "transactionId": "pay_razorpay_payment_67890",
+        "completionDate": "2024-01-15T11:05:00"
+    }
+]
+```
 
 ---
 
-### Phase 8: Additional Features
+### TEST CASE 7.7: Payment Failure Scenario (Negative Flow)
+**Objective:** Handle payment failure gracefully
+**Business Logic:** Update payment status and maintain order state
 
-#### 8.1 Add to Wishlist
-**Purpose:** Save products for later
+**HTTP Method:** `PUT`
+**Endpoint:** `/api/payments/1/status?status=FAILED`
 
-**Endpoint:** `POST /api/wishlist`
+**Expected Response (HTTP 200):**
+```json
+{
+    "paymentId": 1,
+    "status": "FAILED",
+    "failureReason": "Insufficient funds",
+    "amount": 4889.93,
+    "paymentDate": "2024-01-15T11:00:00"
+}
+```
+
+**Failure Handling:**
+- **Order Status:** May revert to PENDING for retry
+- **Inventory:** Release reserved stock
+- **Customer Notification:** Payment failure email
+- **Retry Logic:** Allow customer to retry payment
+
+---
+
+## Phase 8: Wishlist Management
+
+### TEST CASE 8.1: Add Product to Wishlist
+**Objective:** Save product for future purchase consideration
+**Business Logic:** Creates wishlist entry with user-product association
+**Prerequisites:** Valid userId and productId (delivered order products recommended)
+
+**HTTP Method:** `POST`
+**Endpoint:** `/api/wishlist`
+**Authorization:** Session-based (authenticated user required)
+
+**Request Headers:**
+```
+Content-Type: application/json
+```
 
 **Request Body:**
 ```json
@@ -1243,40 +1733,197 @@ Content-Type: application/json
         "userId": 1
     },
     "product": {
-        "productId": 1
+        "productId": 2
     }
 }
 ```
 
-**Expected Response (200 OK):**
+**Expected Response (HTTP 200):**
 ```json
 {
     "wishlistId": 1,
     "user": {
+        "userId": 1,
+        "username": "testuser001",
+        "email": "testuser001@example.com"
+    },
+    "product": {
+        "productId": 2,
+        "name": "Premium Cotton T-Shirt",
+        "price": 29.99,
+        "imageUrl": "https://example.com/images/cotton-tshirt.jpg"
+    }
+}
+```
+
+**Critical Test Data:**
+- **Save wishlistId:** `1` (Required for wishlist operations)
+- **Duplicate Prevention:** Adding same product should return 409 Conflict
+
+**Business Logic Validations:**
+- **User Validation:** userId must exist and be authenticated
+- **Product Validation:** productId must exist and be active
+- **Uniqueness:** One product per user in wishlist (no duplicates)
+
+---
+
+### TEST CASE 8.2: Add Duplicate Product to Wishlist (Negative Flow)
+**Objective:** Validate duplicate prevention logic
+**Business Logic:** System should reject duplicate wishlist entries
+
+**HTTP Method:** `POST`
+**Endpoint:** `/api/wishlist`
+
+**Request Body:**
+```json
+{
+    "user": {
         "userId": 1
     },
     "product": {
-        "productId": 1,
-        "name": "iPhone 15"
+        "productId": 2
     }
+}
+```
+
+**Expected Response (HTTP 409):**
+```json
+{
+    "message": "Product is already in the wishlist!"
 }
 ```
 
 ---
 
-#### 8.2 Get Wishlist Items
-**Purpose:** Retrieve user's wishlist
+### TEST CASE 8.3: Get User Wishlist Items
+**Objective:** Retrieve all wishlist items for specific user
+**Business Logic:** Returns user's saved products with current pricing
+**Prerequisites:** Valid userId and existing wishlist items
 
-**Endpoint:** `GET /api/wishlist/user/1`
+**HTTP Method:** `GET`
+**Endpoint:** `/api/wishlist/user/1`
+**Authorization:** Session-based (user can only access own wishlist)
 
-**Expected Response:** Array of wishlist items.
+**Expected Response (HTTP 200):**
+```json
+[
+    {
+        "wishlistId": 1,
+        "user": {
+            "userId": 1
+        },
+        "product": {
+            "productId": 2,
+            "name": "Premium Cotton T-Shirt",
+            "price": 29.99,
+            "stockQuantity": 97,
+            "imageUrl": "https://example.com/images/cotton-tshirt.jpg"
+        }
+    }
+]
+```
+
+**Business Features:**
+- **Current Pricing:** Shows latest product prices
+- **Stock Status:** Indicates availability
+- **Quick Add to Cart:** Easy conversion to purchase
 
 ---
 
-#### 8.3 Add Product Review
-**Purpose:** Add product review after purchase
+### TEST CASE 8.4: Remove Product from Wishlist
+**Objective:** Delete product from user's wishlist
+**Business Logic:** Removes wishlist entry and updates user interface
+**Prerequisites:** Valid wishlistId
 
-**Endpoint:** `POST /api/reviews`
+**HTTP Method:** `DELETE`
+**Endpoint:** `/api/wishlist/1`
+**Authorization:** Session-based (user can only remove own wishlist items)
+
+**Expected Response (HTTP 200):**
+```json
+{
+    "message": "Wishlist item removed successfully"
+}
+```
+
+---
+
+### TEST CASE 8.5: Remove Product by User and Product ID
+**Objective:** Alternative removal method using user and product IDs
+**Business Logic:** Finds and removes wishlist item by relationship IDs
+
+**HTTP Method:** `DELETE`
+**Endpoint:** `/api/wishlist/user/1/product/2`
+**Authorization:** Session-based
+
+**Expected Response (HTTP 200):**
+```json
+{
+    "message": "Wishlist item removed successfully"
+}
+```
+
+**Alternative Use Cases:**
+- **Product Discontinuation:** Remove unavailable products
+- **Bulk Operations:** Remove multiple items efficiently
+
+---
+
+### TEST CASE 8.6: Invalid Wishlist Operations (Negative Flows)
+**Objective:** Validate error handling for invalid operations
+
+**Sub-test 8.6a: Missing User Information**
+**HTTP Method:** `POST`
+**Endpoint:** `/api/wishlist`
+
+**Request Body:**
+```json
+{
+    "product": {
+        "productId": 1
+    }
+}
+```
+
+**Expected Response (HTTP 400):**
+```json
+{
+    "message": "User information is missing or invalid"
+}
+```
+
+**Sub-test 8.6b: Missing Product Information**
+**Request Body:**
+```json
+{
+    "user": {
+        "userId": 1
+    }
+}
+```
+
+**Expected Response (HTTP 400):**
+```json
+{
+    "message": "Product information is missing or invalid"
+}
+```
+
+## Phase 9: Product Reviews
+
+### TEST CASE 9.1: Add Product Review
+**Objective:** Create product review after purchase and delivery
+**Business Logic:** Allows customers to rate and review delivered products
+**Prerequisites:** Valid userId, productId, and completed order (DELIVERED status)
+
+**HTTP Method:** `POST`
+**Endpoint:** `/api/reviews`
+**Authorization:** Session-based (authenticated user required)
+
+**Request Headers:**
+```
+Content-Type: application/json
+```
 
 **Request Body:**
 ```json
@@ -1288,40 +1935,528 @@ Content-Type: application/json
         "productId": 1
     },
     "rating": 5,
-    "comment": "Excellent product! Highly recommended."
+    "comment": "Excellent product! The iPhone 15 Pro Max exceeded my expectations. Great camera quality and performance."
 }
 ```
 
-**Expected Response (200 OK):**
+**Expected Response (HTTP 200):**
 ```json
 {
     "reviewId": 1,
+    "user": {
+        "userId": 1,
+        "username": "testuser001"
+    },
+    "product": {
+        "productId": 1,
+        "name": "iPhone 15 Pro Max"
+    },
     "rating": 5,
-    "comment": "Excellent product! Highly recommended.",
-    "reviewDate": "2024-01-15T11:00:00"
+    "comment": "Excellent product! The iPhone 15 Pro Max exceeded my expectations. Great camera quality and performance.",
+    "reviewDate": "2024-01-18T09:00:00"
+}
+```
+
+**Critical Test Data:**
+- **Save reviewId:** `1` (Required for review operations)
+- **Rating Range:** 1-5 integer values only
+- **Purchase Verification:** User must have purchased the product
+
+**Business Logic Validations:**
+- **Rating Constraints:** Must be integer between 1 and 5
+- **Purchase Requirement:** User must have delivered order containing product
+- **Single Review:** One review per user per product (business rule)
+- **Content Moderation:** Comment length and content validation
+
+**Data Validation Rules:**
+- Rating: Required, integer, range 1-5
+- Comment: Optional, TEXT type, max length validation
+- User: Required, must be authenticated
+- Product: Required, must exist and be purchasable
+
+---
+
+### TEST CASE 9.2: Add Second Product Review
+**Objective:** Create review for different product
+**Prerequisites:** Different productId from delivered order
+
+**HTTP Method:** `POST`
+**Endpoint:** `/api/reviews`
+
+**Request Body:**
+```json
+{
+    "user": {
+        "userId": 1
+    },
+    "product": {
+        "productId": 2
+    },
+    "rating": 4,
+    "comment": "Good quality t-shirt. Comfortable fabric and nice fit. Delivery was prompt."
+}
+```
+
+**Expected Response (HTTP 200):**
+```json
+{
+    "reviewId": 2,
+    "rating": 4,
+    "comment": "Good quality t-shirt. Comfortable fabric and nice fit. Delivery was prompt.",
+    "reviewDate": "2024-01-18T09:15:00"
+}
+```
+
+**Save reviewId:** `2`
+
+---
+
+### TEST CASE 9.3: Get All Reviews
+**Objective:** Retrieve all product reviews for administrative purposes
+**Business Logic:** Administrative view of all customer reviews
+
+**HTTP Method:** `GET`
+**Endpoint:** `/api/reviews`
+**Authorization:** Session-based (may require admin privileges)
+
+**Expected Response (HTTP 200):**
+```json
+[
+    {
+        "reviewId": 1,
+        "user": {
+            "userId": 1,
+            "username": "testuser001"
+        },
+        "product": {
+            "productId": 1,
+            "name": "iPhone 15 Pro Max"
+        },
+        "rating": 5,
+        "comment": "Excellent product! The iPhone 15 Pro Max exceeded my expectations. Great camera quality and performance.",
+        "reviewDate": "2024-01-18T09:00:00"
+    },
+    {
+        "reviewId": 2,
+        "user": {
+            "userId": 1,
+            "username": "testuser001"
+        },
+        "product": {
+            "productId": 2,
+            "name": "Premium Cotton T-Shirt"
+        },
+        "rating": 4,
+        "comment": "Good quality t-shirt. Comfortable fabric and nice fit. Delivery was prompt.",
+        "reviewDate": "2024-01-18T09:15:00"
+    }
+]
+```
+
+---
+
+### TEST CASE 9.4: Get Review by ID
+**Objective:** Retrieve specific review details
+**Prerequisites:** Valid reviewId
+
+**HTTP Method:** `GET`
+**Endpoint:** `/api/reviews/1`
+**Authorization:** None required (public reviews)
+
+**Expected Response (HTTP 200):**
+```json
+{
+    "reviewId": 1,
+    "user": {
+        "userId": 1,
+        "username": "testuser001"
+    },
+    "product": {
+        "productId": 1,
+        "name": "iPhone 15 Pro Max"
+    },
+    "rating": 5,
+    "comment": "Excellent product! The iPhone 15 Pro Max exceeded my expectations. Great camera quality and performance.",
+    "reviewDate": "2024-01-18T09:00:00"
 }
 ```
 
 ---
 
-#### 8.4 Chat with AI Assistant
-**Purpose:** Get customer support via AI chatbot
+### TEST CASE 9.5: Update Product Review
+**Objective:** Allow customers to modify their existing reviews
+**Business Logic:** Users can edit their own reviews within time constraints
+**Prerequisites:** Valid reviewId and review ownership
 
-**Endpoint:** `POST /api/chat`
+**HTTP Method:** `PUT`
+**Endpoint:** `/api/reviews/1`
+**Authorization:** Session-based (review owner only)
 
 **Request Body:**
 ```json
 {
-    "message": "I need help with my order status"
+    "rating": 5,
+    "comment": "UPDATED: Excellent product! The iPhone 15 Pro Max exceeded my expectations. After using for a week, I'm even more impressed with the camera quality and performance."
 }
 ```
 
-**Expected Response (200 OK):**
+**Expected Response (HTTP 200):**
 ```json
 {
-    "response": "I'd be happy to help you check your order status. Please provide your order ID."
+    "reviewId": 1,
+    "rating": 5,
+    "comment": "UPDATED: Excellent product! The iPhone 15 Pro Max exceeded my expectations. After using for a week, I'm even more impressed with the camera quality and performance.",
+    "reviewDate": "2024-01-18T09:00:00",
+    "lastModified": "2024-01-19T10:30:00"
 }
 ```
+
+**Business Constraints:**
+- **Ownership:** Users can only edit their own reviews
+- **Time Limits:** May restrict editing after certain period
+- **Audit Trail:** Track modification history
+
+---
+
+### TEST CASE 9.6: Review Validation (Negative Flows)
+**Objective:** Validate review creation constraints
+
+**Sub-test 9.6a: Invalid Rating Range**
+**HTTP Method:** `POST`
+**Endpoint:** `/api/reviews`
+
+**Request Body:**
+```json
+{
+    "user": {
+        "userId": 1
+    },
+    "product": {
+        "productId": 1
+    },
+    "rating": 6,
+    "comment": "Invalid rating test"
+}
+```
+
+**Expected Response (HTTP 400):**
+```json
+{
+    "error": "Rating must be between 1 and 5"
+}
+```
+
+**Sub-test 9.6b: Review Without Purchase**
+**Request Body:**
+```json
+{
+    "user": {
+        "userId": 1
+    },
+    "product": {
+        "productId": 999
+    },
+    "rating": 5,
+    "comment": "Review without purchase"
+}
+```
+
+**Expected Response (HTTP 400):**
+```json
+{
+    "error": "You can only review products you have purchased"
+}
+```
+
+## Phase 10: AI Chat Support
+
+### TEST CASE 10.1: Customer Support Chat Query
+**Objective:** Provide AI-powered customer support through chat interface
+**Business Logic:** Integrates with Hugging Face API for intelligent responses
+**Prerequisites:** Hugging Face API configuration and internet connectivity
+
+**HTTP Method:** `POST`
+**Endpoint:** `/api/chat`
+**Authorization:** Session-based (authenticated user recommended)
+
+**Request Headers:**
+```
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+    "message": "I need help with tracking my order. My order ID is 1."
+}
+```
+
+**Expected Response (HTTP 200):**
+```json
+{
+    "response": "I'd be happy to help you track your order! For Order ID 1, I can see it's currently in DELIVERED status. Your order was delivered on 2024-01-17. If you have any concerns about your delivery, please let me know how I can assist further."
+}
+```
+
+**AI Integration Features:**
+- **Natural Language Processing:** Understands customer queries in plain English
+- **Context Awareness:** May access order/user data for personalized responses
+- **Multi-topic Support:** Handles various customer service scenarios
+
+**Common Chat Scenarios:**
+- Order status inquiries
+- Product information requests
+- Return and refund policies
+- Account-related questions
+- Technical support
+
+---
+
+### TEST CASE 10.2: Product Information Query
+**Objective:** Get product details through conversational interface
+
+**HTTP Method:** `POST`
+**Endpoint:** `/api/chat`
+
+**Request Body:**
+```json
+{
+    "message": "Tell me about the iPhone 15 Pro Max. What are its key features?"
+}
+```
+
+**Expected Response (HTTP 200):**
+```json
+{
+    "response": "The iPhone 15 Pro Max is our premium smartphone featuring the A17 Pro chip, titanium design, and advanced camera system. It's priced at $1199.99 and currently in stock. Would you like more details about any specific features or need help with purchasing?"
+}
+```
+
+---
+
+### TEST CASE 10.3: General Support Query
+**Objective:** Handle general customer service inquiries
+
+**HTTP Method:** `POST`
+**Endpoint:** `/api/chat`
+
+**Request Body:**
+```json
+{
+    "message": "What is your return policy?"
+}
+```
+
+**Expected Response (HTTP 200):**
+```json
+{
+    "response": "Our return policy allows returns within 30 days of delivery for most items. Items must be in original condition with packaging. To initiate a return, please contact our customer service team or use your account dashboard. Is there a specific item you'd like to return?"
+}
+```
+
+---
+
+### TEST CASE 10.4: Chat Error Handling (Negative Flow)
+**Objective:** Validate chat service error scenarios
+
+**Sub-test 10.4a: Empty Message**
+**HTTP Method:** `POST`
+**Endpoint:** `/api/chat`
+
+**Request Body:**
+```json
+{
+    "message": ""
+}
+```
+
+**Expected Response (HTTP 400):**
+```json
+{
+    "error": "Message cannot be empty"
+}
+```
+
+**Sub-test 10.4b: Service Unavailable**
+*(Simulated when Hugging Face API is down)*
+
+**Expected Response (HTTP 500):**
+```json
+{
+    "error": "Chat service temporarily unavailable. Please try again later."
+}
+```
+
+---
+
+## Phase 11: Email Service Testing
+
+### TEST CASE 11.1: Email Service Functionality Test
+**Objective:** Verify email notification system
+**Business Logic:** Tests SMTP configuration and email delivery
+**Prerequisites:** SMTP server configuration in application.properties
+
+**HTTP Method:** `GET`
+**Endpoint:** `/api/payments/test-email`
+**Authorization:** Session-based (admin access recommended)
+
+**Expected Response (HTTP 200):**
+```
+Email sent!
+```
+
+**Email Delivery Verification:**
+- **Recipient:** Configured test email address
+- **Subject:** "Test Email"
+- **Content:** "This is a test email."
+- **Delivery Time:** Should be received within minutes
+
+**Email Service Integration Points:**
+- **User Registration:** Welcome email
+- **Order Confirmation:** Order details email
+- **Payment Confirmation:** Payment success email
+- **Order Status Updates:** Shipping notifications
+- **Password Reset:** Security emails
+
+**SMTP Configuration Requirements:**
+- **Host:** SMTP server address
+- **Port:** SMTP port (587 for TLS, 465 for SSL)
+- **Authentication:** Username and password
+- **Security:** TLS/SSL encryption
+
+---
+
+## Phase 12: Administrative Operations
+
+### TEST CASE 12.1: Admin - Get All Users
+**Objective:** Administrative view of all registered users
+**Business Logic:** User management for customer service and analytics
+**Prerequisites:** Admin privileges
+
+**HTTP Method:** `GET`
+**Endpoint:** `/api/users`
+**Authorization:** Session-based (admin access required)
+
+**Expected Response (HTTP 200):**
+```json
+[
+    {
+        "userId": 1,
+        "username": "testuser001",
+        "email": "testuser001@example.com",
+        "role": "USER"
+    }
+]
+```
+
+**Administrative Features:**
+- **User Statistics:** Total user count
+- **Account Status:** Active/inactive users
+- **Registration Trends:** User growth analytics
+- **Security:** Password excluded from response
+
+---
+
+### TEST CASE 12.2: Admin - Get All Categories
+**Objective:** Category management for catalog administration
+
+**HTTP Method:** `GET`
+**Endpoint:** `/api/categories`
+**Authorization:** Session-based
+
+**Expected Response (HTTP 200):**
+```json
+[
+    {
+        "categoryId": 1,
+        "name": "Electronics",
+        "description": "Electronic devices, gadgets, and accessories"
+    },
+    {
+        "categoryId": 2,
+        "name": "Clothing",
+        "description": "Fashion apparel and accessories"
+    }
+]
+```
+
+---
+
+### TEST CASE 12.3: Admin - Update Product Information
+**Objective:** Product catalog management
+**Business Logic:** Update product details, pricing, and availability
+**Prerequisites:** Valid productId and admin access
+
+**HTTP Method:** `PUT`
+**Endpoint:** `/api/products/1`
+**Authorization:** Session-based (admin access)
+
+**Request Body:**
+```json
+{
+    "name": "iPhone 15 Pro Max (Updated)",
+    "description": "Latest iPhone with A17 Pro chip, titanium design, and advanced camera system. Now with extended warranty.",
+    "price": 1099.99,
+    "stockQuantity": 75,
+    "size": "L",
+    "imageUrl": "https://example.com/images/iphone15promax-updated.jpg"
+}
+```
+
+**Expected Response (HTTP 200):**
+```json
+{
+    "productId": 1,
+    "name": "iPhone 15 Pro Max (Updated)",
+    "description": "Latest iPhone with A17 Pro chip, titanium design, and advanced camera system. Now with extended warranty.",
+    "price": 1099.99,
+    "stockQuantity": 75,
+    "size": "L",
+    "imageUrl": "https://example.com/images/iphone15promax-updated.jpg"
+}
+```
+
+**Product Management Features:**
+- **Price Updates:** Dynamic pricing management
+- **Inventory Control:** Stock level adjustments
+- **Product Information:** Description and image updates
+- **Availability:** Enable/disable product sales
+
+---
+
+### TEST CASE 12.4: Admin - Delete Operations (Negative Flow)
+**Objective:** Validate referential integrity constraints
+**Business Logic:** Prevent deletion of referenced entities
+
+**Sub-test 12.4a: Delete Product with Order History**
+**HTTP Method:** `DELETE`
+**Endpoint:** `/api/products/1`
+
+**Expected Response (HTTP 400 or 409):**
+```json
+{
+    "error": "Cannot delete product with existing order history",
+    "constraint": "Foreign key constraint violation"
+}
+```
+
+**Sub-test 12.4b: Delete Category with Products**
+**HTTP Method:** `DELETE`
+**Endpoint:** `/api/categories/1`
+
+**Expected Response (HTTP 400 or 409):**
+```json
+{
+    "error": "Cannot delete category with associated products",
+    "associatedProducts": 1
+}
+```
+
+**Data Integrity Protection:**
+- **Order History:** Preserve product data for completed orders
+- **Financial Records:** Maintain payment and transaction history
+- **User Data:** Protect customer information and privacy
+- **Audit Trail:** Keep modification logs for compliance
 
 ---
 
