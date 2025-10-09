@@ -1,16 +1,9 @@
 package com.example.backend.services;
 
-import com.example.backend.model.Category;
 import com.example.backend.model.Product;
-import com.example.backend.repository.CategoryRepository;
 import com.example.backend.repository.ProductRepository;
 import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,11 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@CacheConfig(cacheNames = "products")
 public class ProductService {
-	
-	@Autowired
-	private CategoryRepository categoryRepository;
 
     @Autowired
     private ProductRepository productRepository;
@@ -32,31 +21,11 @@ public class ProductService {
     private WishlistService wishlistService; // Inject WishlistService
 
     // Create a new product
-    @Caching(
-    		put = {
-    				@CachePut(key = "#result.productId")
-    		},
-    		evict = {
-    				@CacheEvict(key = "'allproducts'")
-    		}
-    		
-    		)
     public Product createProduct(Product product) {
-        if (product.getCategory() == null || product.getCategory().getCategoryId() == null) {
-            throw new RuntimeException("Category is required");
-        }
-
-        Category category = categoryRepository.findById(product.getCategory().getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
-
-        product.setCategory(category);
         return productRepository.save(product);
     }
 
-
-
     // Get all products
-    @Cacheable(key = "'allproducts'")
     public List<Product> getAllProducts() {
         List<Product> products = productRepository.findAll();
         System.out.println("Fetched Products: " + products.size()); // Check how many are returned
@@ -65,7 +34,6 @@ public class ProductService {
 
 
     // Get product by ID
-    @Cacheable(key = "#productId")
     public Optional<Product> getProductById(Long productId) {
         System.out.println("Attempting to fetch product with ID: " + productId);
         Optional<Product> product = productRepository.findById(productId);
@@ -83,15 +51,6 @@ public class ProductService {
     }
 
     // Update product
-    @Caching(
-    		put = {
-    				@CachePut(key = "#result.productId")
-    		},
-    		evict = {
-    				@CacheEvict(key = "'allproducts'")
-    		}
-    		
-    		)
     public Product updateProduct(Long productId, Product productDetails) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
@@ -107,14 +66,6 @@ public class ProductService {
 
     // Delete product
     @Transactional
-    @Caching(
-    		
-    		evict = {
-    				@CacheEvict(key = "#productId"),
-    				@CacheEvict(key = "'allproducts'")
-    		}
-    		
-    		)
     public void deleteProduct(Long productId) {
         // Check if the product exists
         if (!productRepository.existsById(productId)) {

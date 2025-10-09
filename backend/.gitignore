@@ -19,6 +19,13 @@ target/
 *.iml
 *.ipr
 
+
+# Ignore environment files with secrets
+*.env
+*.properties
+
+
+
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/

@@ -28,10 +28,6 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
-		<maven.compiler.source>21</maven.compiler.source>
-		<maven.compiler.target>21</maven.compiler.target>
-		<maven.compiler.release>21</maven.compiler.release>
-		<lombok.version>1.18.32</lombok.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -102,16 +98,11 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.11.0</version>
 				<configuration>
-					<source>21</source>
-					<target>21</target>
-					<release>21</release>
 					<annotationProcessorPaths>
 						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
-							<version>${lombok.version}</version>
 						</path>
 					</annotationProcessorPaths>
 				</configuration>

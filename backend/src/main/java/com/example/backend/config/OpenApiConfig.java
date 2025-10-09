@@ -11,7 +11,7 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Ecommerce Backend API")
+                        .title("User Management API")
                         .version("1.0.0")
                         .description("API for managing users in the backend system"));
     }

@@ -3,11 +3,6 @@ package com.example.backend.services;
 import com.example.backend.model.User;
 import com.example.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +10,6 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@CacheConfig(cacheNames = "users")
 public class UserService {
 
     @Autowired
@@ -25,10 +19,6 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
 
     // Create a new user
-    @Caching(
-        put = { @CachePut(key = "#result.userId") },
-        evict = { @CacheEvict(key = "'allusers'") }
-    )
     public User createUser(User user) {
         // Encode the password before saving
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -36,22 +26,16 @@ public class UserService {
     }
 
     // Get all users
-    @Cacheable(key = "'allusers'")
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
     // Get user by ID
-    @Cacheable(key = "#userId")
     public Optional<User> getUserById(Long userId) {
         return userRepository.findById(userId);
     }
 
     // Update user
-    @Caching(
-        put = { @CachePut(key = "#result.userId") },
-        evict = { @CacheEvict(key = "'allusers'") }
-    )
     public User updateUser(Long userId, User userDetails) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
@@ -68,7 +52,6 @@ public class UserService {
     }
 
     // Delete user
-    @Caching(evict = { @CacheEvict(key = "#userId"), @CacheEvict(key = "'allusers'") })
     public void deleteUser(Long userId) {
         userRepository.deleteById(userId);
     }

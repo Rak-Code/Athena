@@ -19,11 +19,10 @@ public class ProductController {
 
     // Create a new product
     @PostMapping
-    public Product createProduct(@RequestBody Product product) {
-        return productService.createProduct(product);
+    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
+        Product createdProduct = productService.createProduct(product);
+        return ResponseEntity.ok(createdProduct);
     }
-
-
 
     // Get all products
     @GetMapping
