@@ -39,7 +39,7 @@ public class Product {
     // Many-to-One relationship with Category
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
-    @JsonIgnore // Prevents infinite loop when serializing JSON
+    // Prevents infinite loop when serializing JSON
     private Category category;
 
     public enum Size {
